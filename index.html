@@ -81,6 +81,10 @@
             .glass-card { background: #fff !important; border: 1px solid #e2e8f0 !important; box-shadow: none !important; backdrop-filter: none !important; }
             .glass-card h1, .glass-card h2, .glass-card h3 { color: #0f172a !important; }
         }
+        /* Botão "Instalar app" só na versão móvel (oculto no desktop) */
+        @media (min-width: 1024px) {
+            #btn-instalar { display: none !important; }
+        }
     </style>
 </head>
 <body class="font-sans antialiased min-h-screen pb-12">
@@ -265,6 +269,32 @@
             </div>
         </section>
 
+        <!-- SEÇÃO DO GRÁFICO DE ROSCA (CLASSE DO CLIENTE) -->
+        <section class="grid grid-cols-1 gap-8">
+            <div class="glass-card rounded-2xl p-6 shadow-xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-slate-800 gap-2">
+                    <div>
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-layer-group text-emerald-400"></i> Inadimplência por Classe de Cliente
+                        </h3>
+                        <p class="text-xs text-slate-400">Distribuição do saldo a receber em aberto (R$ em 0,00) por classe do cliente</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                    <!-- Gráfico de Rosca -->
+                    <div class="md:col-span-6 lg:col-span-5 relative flex justify-center items-center h-[280px]">
+                        <canvas id="classeDoughnutChart"></canvas>
+                    </div>
+
+                    <!-- Legenda Customizada com Valores e Percentuais ao Lado -->
+                    <div class="md:col-span-6 lg:col-span-7 space-y-2.5" id="classe-legend-container">
+                        <!-- Alimentado via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- SEÇÃO DA TABELA DE DEVEDORES -->
         <section class="glass-card rounded-2xl p-6 shadow-xl overflow-hidden">
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
@@ -350,12 +380,19 @@
         'Em Cartório': '#ef4444'
     };
     const PALETA_FALLBACK = ['#22d3ee','#f472b6','#facc15','#4ade80','#c084fc','#fb923c','#60a5fa','#94a3b8'];
+    const CORES_CLASSE = {
+        'Classe VIP': '#eab308',
+        'Classe A': '#10b981',
+        'Classe B': '#38bdf8',
+        'Classe C': '#a855f7',
+        'Sem classe': '#64748b'
+    };
 
     // Estado global
     let DADOS = [];
     let selKeyAtual = null;
     let devedoresAtual = [];
-    let chartInad = null, chartRecup = null, chartRosca = null;
+    let chartInad = null, chartRecup = null, chartRosca = null, chartRoscaClasse = null;
 
     /* ============================================================
        FORMATAÇÃO
@@ -375,6 +412,13 @@
         const s = String(raw == null ? '' : raw).trim();
         const semId = s.replace(/^\s*\d+\s+/, '').trim(); // remove o "[ID] " inicial
         return semId || s || '—';
+    }
+    function limparClasse(raw) {
+        let s = String(raw == null ? '' : raw).trim();
+        if (!s) return 'Sem classe';
+        const i = s.indexOf('::');
+        if (i > -1) s = s.slice(0, i).trim(); // "Classe A ::" -> "Classe A"
+        return s || 'Sem classe';
     }
 
     /* ============================================================
@@ -513,7 +557,8 @@
                 dtLiq: parseGvizDate(cell(9)),
                 valorOriginal: valorOriginal,
                 valorPago: parseNum(cell(11)),
-                saldo: saldo
+                saldo: saldo,
+                classe: limparClasse((cell(13) && cell(13).v != null) ? cell(13).v : '')
             });
         }
         return out;
@@ -562,6 +607,16 @@
     // Valor da dívida de um título em aberto = Coluna K (Valor Original).
     function valorDevido(row) {
         return row.valorOriginal > 0 ? row.valorOriginal : row.saldo;
+    }
+
+    // Saldo a Receber (Coluna M) do título na visão da data de referência.
+    // Se o pagamento é posterior ao mês selecionado, na época o saldo era o valor cheio (K);
+    // caso contrário usa a própria Coluna M (que, sem pagamento, é igual ao Valor Original).
+    function saldoEmAberto(row, refEnd) {
+        if (row.dtLiq && row.dtLiq.getTime() > refEnd.getTime()) {
+            return row.valorOriginal > 0 ? row.valorOriginal : row.saldo;
+        }
+        return row.saldo > 0 ? row.saldo : row.valorOriginal;
     }
 
     /* ============================================================
@@ -633,6 +688,73 @@
         }
 
         chartRosca = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: dados.map(d => d.label),
+                datasets: [{
+                    data: dados.map(d => d.value),
+                    backgroundColor: dados.map(d => d.color),
+                    borderWidth: 2,
+                    borderColor: '#0f172a',
+                    hoverOffset: 6
+                }]
+            },
+            options: opcoesRosca
+        });
+
+        dados.forEach(item => {
+            const pct = ((item.value / totalVal) * 100).toFixed(1);
+            const html =
+                '<div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">' +
+                    '<div class="flex items-center space-x-3 min-w-0">' +
+                        '<div class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color:' + item.color + '"></div>' +
+                        '<span class="text-xs font-semibold text-slate-200 truncate">' + item.label + '</span>' +
+                    '</div>' +
+                    '<div class="text-right shrink-0 ml-3">' +
+                        '<span class="text-xs font-bold text-white block">' + formatBRL(item.value) + '</span>' +
+                        '<span class="text-[10px] text-slate-400 block">' + pct + '% do total</span>' +
+                    '</div>' +
+                '</div>';
+            legend.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    /* ============================================================
+       RENDERIZAÇÃO — GRÁFICO DE ROSCA (classe) — base Coluna M (Saldo a Receber)
+       ============================================================ */
+    function renderRoscaClasse(selKey) {
+        const refEnd = fimDoMes(selKey);
+        const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
+
+        const mapa = {};
+        abertos.forEach(r => {
+            const cl = r.classe || 'Sem classe';
+            mapa[cl] = (mapa[cl] || 0) + saldoEmAberto(r, refEnd);
+        });
+
+        let dados = Object.keys(mapa).map(k => ({ label: k, value: mapa[k] }));
+        dados = dados.filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+
+        let fb = 0;
+        dados.forEach(d => { d.color = CORES_CLASSE[d.label] || PALETA_FALLBACK[fb++ % PALETA_FALLBACK.length]; });
+        const totalVal = dados.reduce((s, d) => s + d.value, 0);
+
+        if (chartRoscaClasse) { chartRoscaClasse.destroy(); chartRoscaClasse = null; }
+        const ctx = document.getElementById('classeDoughnutChart');
+        const legend = document.getElementById('classe-legend-container');
+        legend.innerHTML = '';
+
+        if (!dados.length || totalVal <= 0) {
+            legend.innerHTML = '<div class="text-xs text-slate-500 p-3 rounded-xl bg-slate-900/60 border border-slate-800">Nenhuma inadimplência em aberto neste período.</div>';
+            chartRoscaClasse = new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#1e293b'], borderWidth: 0 }] },
+                options: Object.assign({}, opcoesRosca, { plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } } })
+            });
+            return;
+        }
+
+        chartRoscaClasse = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels: dados.map(d => d.label),
@@ -836,6 +958,7 @@
         renderKPIs(selKey);
         renderBarras(selKey);
         renderRosca(selKey);
+        renderRoscaClasse(selKey);
         renderTabela(selKey);
         atualizarCarimbo();
     }
