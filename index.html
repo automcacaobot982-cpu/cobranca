@@ -718,9 +718,9 @@
     /* ============================================================
        RENDERIZAÇÃO — GRÁFICOS DE BARRAS (sem eixo Y, valor no topo)
        ============================================================ */
-    // Agrupa por mês (últimos 24 meses até selKey) e por ano (mais antigos)
+    // Agrupa por mês (últimos 12 meses até selKey) e por ano (mais antigos que 12 meses)
     function agruparBarras(selKey, tipo) {
-        const startKey = selKey - 23;
+        const startKey = selKey - 11;
         const meses = {}, anos = {};
         DADOS.forEach(r => {
             let d, val;
