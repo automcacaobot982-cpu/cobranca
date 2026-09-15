@@ -136,7 +136,7 @@
                     <div class="min-w-0">
                         <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total da Inadimplência</span>
                         <div class="flex items-center gap-2 mt-1">
-                            <i id="kpi-total-arrow" class="fa-solid text-base shrink-0" style="display:none" aria-hidden="true"></i>
+                            <span id="kpi-total-arrow" class="text-base font-bold shrink-0"></span>
                             <h2 class="text-2xl font-extrabold text-white" id="kpi-total-val">R$ 0,00</h2>
                         </div>
                         <span class="block text-xs text-slate-400 mt-1" id="kpi-total-qty">—</span>
@@ -153,7 +153,7 @@
                     <div class="min-w-0">
                         <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência BELT</span>
                         <div class="flex items-center gap-2 mt-1">
-                            <i id="kpi-belt-arrow" class="fa-solid text-base shrink-0" style="display:none" aria-hidden="true"></i>
+                            <span id="kpi-belt-arrow" class="text-base font-bold shrink-0"></span>
                             <h2 class="text-2xl font-extrabold text-white" id="kpi-belt-val">R$ 0,00</h2>
                         </div>
                         <span class="block text-xs text-slate-400 mt-1" id="kpi-belt-qty">—</span>
@@ -170,7 +170,7 @@
                     <div class="min-w-0">
                         <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência B3</span>
                         <div class="flex items-center gap-2 mt-1">
-                            <i id="kpi-b3-arrow" class="fa-solid text-base shrink-0" style="display:none" aria-hidden="true"></i>
+                            <span id="kpi-b3-arrow" class="text-base font-bold shrink-0"></span>
                             <h2 class="text-2xl font-extrabold text-white" id="kpi-b3-val">R$ 0,00</h2>
                         </div>
                         <span class="block text-xs text-slate-400 mt-1" id="kpi-b3-qty">—</span>
@@ -187,7 +187,7 @@
                     <div class="min-w-0">
                         <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência MBK</span>
                         <div class="flex items-center gap-2 mt-1">
-                            <i id="kpi-mbk-arrow" class="fa-solid text-base shrink-0" style="display:none" aria-hidden="true"></i>
+                            <span id="kpi-mbk-arrow" class="text-base font-bold shrink-0"></span>
                             <h2 class="text-2xl font-extrabold text-white" id="kpi-mbk-val">R$ 0,00</h2>
                         </div>
                         <span class="block text-xs text-slate-400 mt-1" id="kpi-mbk-qty">—</span>
@@ -639,25 +639,34 @@
         };
     }
 
-    // Seta de tendência exibida antes do valor:
-    //   • vermelha para cima  → valor MAIOR que o mês anterior (inadimplência subiu)
-    //   • verde para baixo    → valor MENOR que o mês anterior (inadimplência caiu)
-    //   • sem seta            → valor igual ao mês anterior (sem variação)
+    // Seta/Símbolo de tendência exibido antes do valor:
+    //   • seta vermelha para cima (↑) -> valor MAIOR que o mês anterior
+    //   • seta verde para baixo (↓) -> valor MENOR que o mês anterior
+    //   • '=' em amarelo -> valor IGUAL ao mês anterior
     function atualizarSetaTendencia(id, valorAtual, valorAnterior) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.className = 'fa-solid text-base shrink-0'; // limpa estado anterior
-        if (valorAtual > valorAnterior) {
-            el.classList.add('fa-arrow-up', 'text-red-400');
-            el.title = 'Aumentou em relação ao mês anterior';
-            el.style.display = '';
-        } else if (valorAtual < valorAnterior) {
-            el.classList.add('fa-arrow-down', 'text-emerald-400');
-            el.title = 'Diminuiu em relação ao mês anterior';
-            el.style.display = '';
+        el.className = 'text-base font-bold shrink-0'; // limpa estilos anteriores
+        
+        // Comparação com precisão de centavos
+        const vAtual = Math.round((valorAtual || 0) * 100);
+        const vAnt = Math.round((valorAnterior || 0) * 100);
+
+        if (vAtual > vAnt) {
+            el.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+            el.className += ' text-red-500';
+            el.title = 'Valor maior que o mês anterior';
+            el.style.display = 'inline-block';
+        } else if (vAtual < vAnt) {
+            el.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
+            el.className += ' text-emerald-500';
+            el.title = 'Valor menor que o mês anterior';
+            el.style.display = 'inline-block';
         } else {
-            el.title = 'Sem variação em relação ao mês anterior';
-            el.style.display = 'none';
+            el.innerHTML = '=';
+            el.className += ' text-yellow-400 font-extrabold text-lg';
+            el.title = 'Sem mudança de valor em comparação com o mês anterior';
+            el.style.display = 'inline-block';
         }
     }
 
