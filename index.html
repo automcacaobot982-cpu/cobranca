@@ -2,401 +2,438 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#0b0f19">
-    <title>Painel de Cobrança &amp; Gestão Financeira</title>
-    <!-- PWA / Instalação no celular -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Painel de Cobrança & Gestão Financeira · Belt Correias</title>
+
+    <!-- PWA e Favicons -->
     <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0c353b">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Cobranças BELT">
-    <meta name="application-name" content="Cobranças BELT">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/png" sizes="48x48" href="./favicon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+
+    <!-- Google Fonts (IBM Plex Sans + Space Grotesk) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <!-- Chart.js & Datalabels CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
+
     <style>
+        :root {
+            --bg: #eceff1;
+            --surface: #ffffff;
+            --surface-2: #f6f8f9;
+            --ink: #16191c;
+            --ink-2: #586066;
+            --ink-3: #8a939a;
+            --line: #dde3e6;
+            --line-2: #c9d2d6;
+            --bar: #0c353b;
+            --brand: #0d5b63;
+            --brand-2: #0a474d;
+            --brand-tint: #e2efef;
+            --amber: #b57f00;
+            --amber-bg: #fef08a;
+            --amber-text: #854d0e;
+            --red: #cf3a2c;
+            --red-tint: #fbe6e3;
+            --green: #1a9455;
+            --green-tint: #e2f3ea;
+            --shadow-sm: 0 1px 2px rgba(16, 25, 30, .08);
+            --shadow-md: 0 10px 30px rgba(12, 42, 48, .14);
+            --r: 12px;
+            --r-sm: 8px;
+            --sans: 'IBM Plex Sans', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            --num: 'Space Grotesk', 'IBM Plex Sans', system-ui, sans-serif;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; min-height: 100vh; }
         body {
-            background-color: #0b0f19;
-            color: #f1f5f9;
+            font-family: var(--sans);
+            color: var(--ink);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.45;
+            padding-bottom: 40px;
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+
+        button { font-family: inherit; cursor: pointer; }
+        input, select, textarea { font-family: inherit; }
+        .hidden { display: none !important; }
+
+        /* TOPBAR */
+        .topbar {
+            position: sticky; top: 0; z-index: 40;
+            background: var(--bar); color: #eaf6f5;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; padding: 0 22px; height: 60px;
+            box-shadow: var(--shadow-sm);
         }
-        .glass-card:hover {
-            border-color: rgba(56, 189, 248, 0.2);
+        .topbar .tb-brand { display: flex; align-items: center; gap: 12px; }
+        .topbar .tb-title { font-family: var(--num); font-weight: 600; font-size: 16px; }
+        .topbar .tb-title small { display: block; font-family: var(--sans); font-weight: 400; font-size: 11px; color: #9ccbc7; }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+        .control-sm {
+            padding: 6px 12px; border: 1px solid rgba(255,255,255,0.2);
+            border-radius: var(--r-sm); background: rgba(255,255,255,0.1);
+            color: #fff; font-size: 13px; font-weight: 600; outline: none;
         }
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+        .control-sm option { background: var(--surface); color: var(--ink); }
+
+        .btn-nav {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+            color: #fff; padding: 7px 12px; border-radius: var(--r-sm);
+            text-decoration: none; font-size: 13px; font-weight: 600; transition: all .15s;
         }
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
+        .btn-nav:hover { background: rgba(255,255,255,.2); }
+
+        /* MAIN CONTAINER */
+        main { max-width: 1400px; margin: 0 auto; padding: 24px 22px 60px; display: flex; flex-direction: column; gap: 24px; }
+
+        /* CARDS KPI */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .kpi-card {
+            background: var(--surface); border: 1px solid var(--line);
+            border-radius: var(--r); padding: 18px 20px; position: relative;
+            box-shadow: var(--shadow-sm); display: flex; flex-direction: column; justify-content: space-between;
         }
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 4px;
+        .kpi-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: var(--r) 0 0 var(--r); background: var(--brand); }
+        .kpi-card.kpi-red::before { background: var(--red); }
+        .kpi-card.kpi-belt::before { background: var(--brand); }
+        .kpi-card.kpi-b3::before { background: #1f6fd4; }
+        .kpi-card.kpi-mbk::before { background: var(--amber); }
+
+        .kpi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .kpi-label { font-size: 12px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+        .kpi-red .kpi-icon { background: var(--red-tint); color: var(--red); }
+        .kpi-belt .kpi-icon { background: var(--brand-tint); color: var(--brand); }
+        .kpi-b3 .kpi-icon { background: #e8f1fd; color: #1f6fd4; }
+        .kpi-mbk .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
+
+        .kpi-body { display: flex; align-items: baseline; gap: 8px; }
+        .kpi-val { font-family: var(--num); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--ink); }
+        .kpi-sub { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: block; }
+
+        /* BARRAS TEMPORAIS E GRÁFICOS */
+        .card-panel {
+            background: var(--surface); border: 1px solid var(--line);
+            border-radius: var(--r); padding: 22px; box-shadow: var(--shadow-sm);
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px; }
+        .card-head h3 { margin: 0; font-family: var(--num); font-size: 16px; font-weight: 600; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+        .card-head p { margin: 4px 0 0; font-size: 12px; color: var(--ink-2); font-weight: 400; }
+
+        .chart-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .chart-inner { position: relative; height: 320px; min-width: 100%; }
+
+        /* ROSCAS EMPILHADAS COM LEGENDA À DIREITA */
+        .doughnut-stack { display: flex; flex-direction: column; gap: 20px; }
+        .doughnut-row {
+            display: grid; grid-template-columns: minmax(0, 300px) 1fr;
+            gap: 24px; align-items: center;
         }
-        /* Área de gráfico com rolagem horizontal (mobile) */
-        .chart-scroll {
-            width: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
+        .doughnut-canvas-wrap { position: relative; height: 240px; min-width: 0; }
+        .legend-list { display: flex; flex-direction: column; gap: 8px; }
+        .legend-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 12px; background: var(--surface-2); border: 1px solid var(--line);
+            border-radius: var(--r-sm); font-size: 12px;
         }
-        .chart-inner {
-            position: relative;
-            height: 340px;
-            min-width: 100%;
+
+        /* TABELA DE DEVEDORES */
+        .table-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .search-input {
+            padding: 8px 12px; border: 1px solid var(--line-2); border-radius: var(--r-sm);
+            background: var(--surface-2); font-size: 13px; color: var(--ink); width: 280px; outline: none;
         }
-        /* Impressão */
+        .search-input:focus { border-color: var(--brand); }
+
+        .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-sm); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        thead tr { background: var(--surface-2); border-bottom: 1px solid var(--line-2); }
+        th { padding: 12px 16px; font-weight: 600; color: var(--ink-2); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        tbody tr { border-bottom: 1px solid var(--line); background: var(--surface); }
+        tbody tr:hover { background: var(--surface-2); }
+        td { padding: 12px 16px; color: var(--ink); }
+        td.num { font-family: var(--num); font-weight: 600; }
+
+        /* OVERLAY CARREGANDO */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(9, 28, 32, .55);
+            backdrop-filter: blur(2px); z-index: 80; display: flex; align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-card {
+            background: var(--surface); width: 100%; max-width: 420px;
+            border-radius: var(--r); box-shadow: var(--shadow-md); padding: 28px; text-align: center;
+        }
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid var(--line-2);
+            border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* IMPRESSÃO */
         @media print {
+            .no-print, .topbar { display: none !important; }
             body { background: #fff !important; color: #000 !important; }
-            .no-print { display: none !important; }
-            .glass-card { background: #fff !important; border: 1px solid #e2e8f0 !important; box-shadow: none !important; backdrop-filter: none !important; }
-            .glass-card h1, .glass-card h2, .glass-card h3 { color: #0f172a !important; }
+            .card-panel, .kpi-card { border: 1px solid #ccc !important; box-shadow: none !important; }
         }
-        /* Botão "Instalar app" só na versão móvel (oculto no desktop) */
-        @media (min-width: 1024px) {
-            #btn-instalar { display: none !important; }
+
+        @media (max-width: 900px) {
+            .doughnut-row { grid-template-columns: 1fr; }
+            main { padding: 16px 12px; }
+            .search-input { width: 100%; }
         }
     </style>
 </head>
-<body class="font-sans antialiased min-h-screen pb-12">
+<body>
 
-    <!-- Header Executivo e Filtro Suspenso MMMM/AAAA -->
-    <header class="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-50 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-start">
-                <div class="flex items-center space-x-3">
-                    <div class="p-2.5 bg-sky-500/10 rounded-xl border border-sky-500/20 text-sky-400">
-                        <i class="fa-solid fa-chart-line text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                            Painel Financeiro <span class="hidden sm:inline-block text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">Cobrança &amp; Gestão</span>
-                        </h1>
-                        <p class="text-xs text-slate-400">Desempenho e Análise de Parceiros Inadimplentes</p>
-                    </div>
-                </div>
+    <!-- TOPBAR EXECUTIVA -->
+    <header class="topbar">
+        <div class="tb-brand">
+            <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+                <rect width="64" height="64" rx="13" fill="#0a3a40"/>
+                <g stroke="#7fd4d0" stroke-width="3"><circle cx="24" cy="32" r="12"/><circle cx="44" cy="32" r="8"/></g>
+            </svg>
+            <div class="tb-title">
+                Painel Financeiro
+                <small>Cobrança & Gestão de Inadimplência · Belt Correias</small>
             </div>
+        </div>
 
-            <!-- Lista suspensa com formato MMMM/AAAA para alterar periodo -->
-            <div class="flex items-center gap-3 w-full md:w-auto justify-end no-print">
-                <div class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-xl w-full sm:w-auto justify-between sm:justify-start">
-                    <i class="fa-solid fa-calendar-days text-sky-400 text-xs"></i>
-                    <span class="text-xs text-slate-400 hidden sm:inline">Mês de Análise:</span>
-                    <select id="select-mes-ano" onchange="alterarPeriodo(this.value)" class="bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer">
-                        <option class="bg-slate-900 text-white">Carregando…</option>
-                    </select>
-                </div>
-                <button id="btn-instalar" onclick="instalarApp()" title="Instalar aplicativo" class="no-print hidden px-3.5 py-2 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-download"></i> <span>Instalar app</span>
-                </button>
-                <button onclick="carregarDados()" title="Atualizar dados" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition flex items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-arrows-rotate"></i> <span class="hidden sm:inline">Atualizar</span>
-                </button>
-            </div>
+        <div class="topbar-actions no-print">
+            <select id="select-mes-ano" onchange="alterarPeriodo(this.value)" class="control-sm">
+                <option>Carregando...</option>
+            </select>
+            <button id="btn-instalar" onclick="instalarApp()" title="Instalar App" class="btn-nav hidden">
+                <i class="fa-solid fa-download"></i> <span>Instalar</span>
+            </button>
+            <button onclick="carregarDados()" title="Atualizar Dados" class="btn-nav">
+                <i class="fa-solid fa-arrows-rotate"></i> <span>Atualizar</span>
+            </button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
-        <!-- CARTOES DE INFORMATIVOS (KPIS) -->
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-
-            <!-- Card 1: Total da Inadimplência -->
-            <div class="glass-card rounded-2xl p-5 shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                <div class="flex justify-between items-start">
-                    <div class="min-w-0">
-                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Total da Inadimplência</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span id="kpi-total-arrow" class="text-base font-bold shrink-0"></span>
-                            <h2 class="text-2xl font-extrabold text-white" id="kpi-total-val">R$ 0,00</h2>
-                        </div>
-                        <span class="block text-xs text-slate-400 mt-1" id="kpi-total-qty">—</span>
-                    </div>
-                    <div class="p-2.5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20 shrink-0">
-                        <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-                    </div>
+    <!-- MAIN CONTAINER -->
+    <main>
+        <!-- CARDS DE KPIS -->
+        <section class="kpi-grid">
+            <!-- Total -->
+            <div class="kpi-card kpi-red">
+                <div class="kpi-header">
+                    <span class="kpi-label">Total Inadimplência</span>
+                    <div class="kpi-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
                 </div>
+                <div class="kpi-body">
+                    <span id="kpi-total-arrow"></span>
+                    <div class="kpi-val" id="kpi-total-val">R$ 0,00</div>
+                </div>
+                <span class="kpi-sub" id="kpi-total-qty">—</span>
             </div>
 
-            <!-- Card 2: Empresa BELT -->
-            <div class="glass-card rounded-2xl p-5 shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                <div class="flex justify-between items-start">
-                    <div class="min-w-0">
-                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência BELT</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span id="kpi-belt-arrow" class="text-base font-bold shrink-0"></span>
-                            <h2 class="text-2xl font-extrabold text-white" id="kpi-belt-val">R$ 0,00</h2>
-                        </div>
-                        <span class="block text-xs text-slate-400 mt-1" id="kpi-belt-qty">—</span>
-                    </div>
-                    <div class="p-2.5 bg-sky-500/10 text-sky-400 rounded-xl border border-sky-500/20 shrink-0">
-                        <i class="fa-solid fa-industry text-lg"></i>
-                    </div>
+            <!-- BELT -->
+            <div class="kpi-card kpi-belt">
+                <div class="kpi-header">
+                    <span class="kpi-label">Inadimplência BELT</span>
+                    <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
                 </div>
+                <div class="kpi-body">
+                    <span id="kpi-belt-arrow"></span>
+                    <div class="kpi-val" id="kpi-belt-val">R$ 0,00</div>
+                </div>
+                <span class="kpi-sub" id="kpi-belt-qty">—</span>
             </div>
 
-            <!-- Card 3: Empresa B3 -->
-            <div class="glass-card rounded-2xl p-5 shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                <div class="flex justify-between items-start">
-                    <div class="min-w-0">
-                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência B3</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span id="kpi-b3-arrow" class="text-base font-bold shrink-0"></span>
-                            <h2 class="text-2xl font-extrabold text-white" id="kpi-b3-val">R$ 0,00</h2>
-                        </div>
-                        <span class="block text-xs text-slate-400 mt-1" id="kpi-b3-qty">—</span>
-                    </div>
-                    <div class="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/20 shrink-0">
-                        <i class="fa-solid fa-building text-lg"></i>
-                    </div>
+            <!-- B3 -->
+            <div class="kpi-card kpi-b3">
+                <div class="kpi-header">
+                    <span class="kpi-label">Inadimplência B3</span>
+                    <div class="kpi-icon"><i class="fa-solid fa-building"></i></div>
                 </div>
+                <div class="kpi-body">
+                    <span id="kpi-b3-arrow"></span>
+                    <div class="kpi-val" id="kpi-b3-val">R$ 0,00</div>
+                </div>
+                <span class="kpi-sub" id="kpi-b3-qty">—</span>
             </div>
 
-            <!-- Card 4: Empresa MBK -->
-            <div class="glass-card rounded-2xl p-5 shadow-xl relative overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                <div class="flex justify-between items-start">
-                    <div class="min-w-0">
-                        <span class="text-xs font-medium text-slate-400 uppercase tracking-wider">Inadimplência MBK</span>
-                        <div class="flex items-center gap-2 mt-1">
-                            <span id="kpi-mbk-arrow" class="text-base font-bold shrink-0"></span>
-                            <h2 class="text-2xl font-extrabold text-white" id="kpi-mbk-val">R$ 0,00</h2>
-                        </div>
-                        <span class="block text-xs text-slate-400 mt-1" id="kpi-mbk-qty">—</span>
-                    </div>
-                    <div class="p-2.5 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20 shrink-0">
-                        <i class="fa-solid fa-store text-lg"></i>
-                    </div>
+            <!-- MBK -->
+            <div class="kpi-card kpi-mbk">
+                <div class="kpi-header">
+                    <span class="kpi-label">Inadimplência MBK</span>
+                    <div class="kpi-icon"><i class="fa-solid fa-store"></i></div>
                 </div>
+                <div class="kpi-body">
+                    <span id="kpi-mbk-arrow"></span>
+                    <div class="kpi-val" id="kpi-mbk-val">R$ 0,00</div>
+                </div>
+                <span class="kpi-sub" id="kpi-mbk-qty">—</span>
             </div>
-
         </section>
 
-        <!-- SEÇÃO DE GRÁFICOS DE BARRAS TEMPORAIS (SEM EIXO V E VALORES NO TOPO) -->
-        <section class="grid grid-cols-1 gap-8">
-
-            <!-- Gráfico 1: Total de Inadimplemento -->
-            <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-chart-bar text-red-400"></i> Total de Inadimplemento
-                            </h3>
-                            <p class="text-xs text-slate-400">Mensal dos últimos 2 anos (MM/AAAA) e agrupado por ano quando &gt; 2 anos • valores em R$</p>
-                        </div>
-                    </div>
-                    <div class="chart-scroll mt-2">
-                        <div class="chart-inner" id="inad-inner">
-                            <canvas id="inadimplenciaChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gráfico 2: Total Recuperado -->
-            <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <div>
-                            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-circle-check text-emerald-400"></i> Total Recuperado
-                            </h3>
-                            <p class="text-xs text-slate-400">Mensal dos últimos 2 anos (MM/AAAA) e agrupado por ano quando &gt; 2 anos • valores em R$</p>
-                        </div>
-                    </div>
-                    <div class="chart-scroll mt-2">
-                        <div class="chart-inner" id="recup-inner">
-                            <canvas id="recuperadoChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </section>
-
-        <!-- SEÇÃO DO GRÁFICO DE ROSCA (SITUAÇÃO DAS NEGOCIAÇÕES) -->
-        <section class="grid grid-cols-1 gap-8">
-            <div class="glass-card rounded-2xl p-6 shadow-xl">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-slate-800 gap-2">
+        <!-- BARRAS TEMPORAIS -->
+        <section style="display:flex; flex-direction:column; gap:20px;">
+            <div class="card-panel">
+                <div class="card-head">
                     <div>
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-chart-pie text-sky-400"></i> Inadimplência por Situação das Negociações
-                        </h3>
-                        <p class="text-xs text-slate-400">Distribuição dos valores em aberto (R$ em 0,00) por etapa da cobrança</p>
+                        <h3><i class="fa-solid fa-chart-bar" style="color:var(--red);"></i> Total de Inadimplemento</h3>
+                        <p>Evolução mensal dos últimos 2 anos e visão agrupada (valores em R$)</p>
                     </div>
                 </div>
+                <div class="chart-scroll">
+                    <div class="chart-inner" id="inad-inner">
+                        <canvas id="inadimplenciaChart"></canvas>
+                    </div>
+                </div>
+            </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    <!-- Gráfico de Rosca -->
-                    <div class="md:col-span-6 lg:col-span-5 relative flex justify-center items-center h-[280px]">
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-circle-check" style="color:var(--green);"></i> Total Recuperado</h3>
+                        <p>Valores liquidados no período (valores em R$)</p>
+                    </div>
+                </div>
+                <div class="chart-scroll">
+                    <div class="chart-inner" id="recup-inner">
+                        <canvas id="recuperadoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GRÁFICOS DE ROSCA (SITUAÇÃO E CLASSE) - EMPILHADOS, LEGENDA À DIREITA -->
+        <section class="doughnut-stack">
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-chart-pie" style="color:var(--brand);"></i> Por Situação das Negociações</h3>
+                        <p>Etapa atual dos títulos pendentes</p>
+                    </div>
+                </div>
+                <div class="doughnut-row">
+                    <div class="doughnut-canvas-wrap">
                         <canvas id="situacaoDoughnutChart"></canvas>
                     </div>
-
-                    <!-- Legenda Customizada com Valores e Percentuais ao Lado -->
-                    <div class="md:col-span-6 lg:col-span-7 space-y-2.5" id="situacao-legend-container">
-                        <!-- Alimentado via JS -->
-                    </div>
+                    <div class="legend-list" id="situacao-legend-container"></div>
                 </div>
             </div>
-        </section>
 
-        <!-- SEÇÃO DO GRÁFICO DE ROSCA (CLASSE DO CLIENTE) -->
-        <section class="grid grid-cols-1 gap-8">
-            <div class="glass-card rounded-2xl p-6 shadow-xl">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-slate-800 gap-2">
+            <div class="card-panel">
+                <div class="card-head">
                     <div>
-                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-layer-group text-emerald-400"></i> Inadimplência por Classe de Cliente
-                        </h3>
-                        <p class="text-xs text-slate-400">Distribuição do saldo a receber em aberto (R$ em 0,00) por classe do cliente</p>
+                        <h3><i class="fa-solid fa-layer-group" style="color:var(--green);"></i> Por Classe do Cliente</h3>
+                        <p>Distribuição do saldo por perfil de cliente</p>
                     </div>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                    <!-- Gráfico de Rosca -->
-                    <div class="md:col-span-6 lg:col-span-5 relative flex justify-center items-center h-[280px]">
+                <div class="doughnut-row">
+                    <div class="doughnut-canvas-wrap">
                         <canvas id="classeDoughnutChart"></canvas>
                     </div>
-
-                    <!-- Legenda Customizada com Valores e Percentuais ao Lado -->
-                    <div class="md:col-span-6 lg:col-span-7 space-y-2.5" id="classe-legend-container">
-                        <!-- Alimentado via JS -->
-                    </div>
+                    <div class="legend-list" id="classe-legend-container"></div>
                 </div>
             </div>
         </section>
 
-        <!-- SEÇÃO DA TABELA DE DEVEDORES -->
-        <section class="glass-card rounded-2xl p-6 shadow-xl overflow-hidden">
-            <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <!-- TABELA DE DEVEDORES -->
+        <section class="card-panel">
+            <div class="table-controls">
                 <div>
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fa-solid fa-users text-amber-400"></i> Classificação de Devedores
-                    </h3>
-                    <p class="text-xs text-slate-400">Lista ordenada do maior devedor para o menor devedor</p>
+                    <h3><i class="fa-solid fa-users" style="color:var(--amber);"></i> Classificação de Devedores</h3>
+                    <p style="margin:2px 0 0; font-size:12px; color:var(--ink-2);">Ordenado do maior saldo devedor para o menor</p>
                 </div>
-
-                <div class="flex flex-col sm:flex-row items-center gap-3 no-print">
-                    <div class="relative w-full sm:w-64">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-                        <input type="text" id="table-search" placeholder="Buscar por nome ou documento..." class="w-full pl-8 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition">
-                    </div>
+                <div class="no-print">
+                    <input type="text" id="table-search" placeholder="Buscar por nome ou documento..." class="search-input">
                 </div>
             </div>
 
-            <!-- Tabela Conforme Estrutura Solicitada -->
-            <div class="overflow-x-auto rounded-xl border border-slate-800">
-                <table class="w-full text-left border-collapse">
+            <div class="table-wrap">
+                <table>
                     <thead>
-                        <tr class="bg-slate-900/90 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
-                            <th class="py-3.5 px-4 w-12 text-center">#</th>
-                            <th class="py-3.5 px-4">Nome do Devedor</th>
-                            <th class="py-3.5 px-4">CNPJ/CPF</th>
-                            <th class="py-3.5 px-4 text-center">Quantidade de Títulos Abertos</th>
-                            <th class="py-3.5 px-4 text-right">Soma Total da Dívida</th>
+                        <tr>
+                            <th style="width:50px; text-align:center;">#</th>
+                            <th>Nome do Devedor</th>
+                            <th>CNPJ / CPF</th>
+                            <th style="text-align:center;">Títulos Abertos</th>
+                            <th style="text-align:right;">Soma Total da Dívida</th>
                         </tr>
                     </thead>
-                    <tbody id="devedores-table-body" class="divide-y divide-slate-800/60 text-sm">
-                        <!-- Conteúdo alimentado dinamicamente -->
+                    <tbody id="devedores-table-body">
+                        <!-- Alimentado via JS -->
                     </tbody>
                 </table>
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
-    <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 text-center text-xs text-slate-500">
-        <p>Painel de Gestão Financeira • <span id="carimbo">—</span></p>
+    <!-- FOOTER -->
+    <footer style="text-align:center; font-size:12px; color:var(--ink-3); margin-top:20px;">
+        Painel de Gestão Financeira · Belt Correias • <span id="carimbo">—</span>
     </footer>
 
-    <!-- OVERLAY DE CARREGAMENTO / ERRO -->
-    <div id="overlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 backdrop-blur-sm no-print">
-        <div id="overlay-loading" class="flex flex-col items-center gap-4">
-            <div class="w-12 h-12 border-4 border-slate-700 border-t-sky-400 rounded-full animate-spin"></div>
-            <p class="text-sm text-slate-300">Carregando dados da planilha…</p>
+    <!-- OVERLAY CARREGANDO / ERRO -->
+    <div id="overlay" class="modal-overlay no-print">
+        <div id="overlay-loading" class="modal-card">
+            <div class="spinner"></div>
+            <p style="margin:0; font-weight:600; font-size:14px; color:var(--ink);">Carregando dados da planilha...</p>
         </div>
-        <div id="overlay-error" class="hidden max-w-md mx-4 text-center bg-slate-900 border border-red-500/30 rounded-2xl p-6 shadow-2xl">
-            <div class="text-red-400 text-3xl mb-3"><i class="fa-solid fa-triangle-exclamation"></i></div>
-            <h3 class="text-white font-bold mb-2">Não foi possível carregar os dados</h3>
-            <p id="overlay-error-msg" class="text-xs text-slate-400 mb-4 leading-relaxed"></p>
-            <button onclick="carregarDados()" class="px-4 py-2 rounded-lg bg-sky-500 hover:bg-sky-400 text-white text-xs font-semibold transition">
-                <i class="fa-solid fa-arrows-rotate mr-1"></i> Tentar novamente
+        <div id="overlay-error" class="modal-card hidden">
+            <i class="fa-solid fa-circle-exclamation" style="font-size:36px; color:var(--red); margin-bottom:12px;"></i>
+            <h3 style="margin:0 0 8px; font-family:var(--num);">Erro de Conexão</h3>
+            <p id="overlay-error-msg" style="font-size:13px; color:var(--ink-2); margin-bottom:16px;"></p>
+            <button onclick="carregarDados()" class="btn-nav" style="background:var(--brand); border:none; width:100%; justify-content:center; padding:10px;">
+                Tentar Novamente
             </button>
         </div>
     </div>
 
-    <!-- LÓGICA E CONFIGURAÇÕES JAVASCRIPT -->
+    <!-- SCRIPTS E LÓGICA FINANCEIRA -->
     <script>
     "use strict";
 
-    /* ============================================================
-       CONFIGURAÇÃO
-       ============================================================ */
     const SHEET_ID  = '1v-kkS5PHyYDD0l0uRCX4I9y5wk-osXVgarqDhFEMUIQ';
-    const SHEET_GID = '0'; // aba base_cobranca (gid=0)
+    const SHEET_GID = '0';
 
-    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
-    // Cores por situação da negociação (etapa da cobrança)
     const CORES_SITUACAO = {
-        'Aberto': '#64748b',
-        'Pendente': '#f59e0b',
-        'Primeiro Contato': '#0ea5e9',
-        'Em Negociação': '#a855f7',
-        'Aguardando Pagamento': '#38bdf8',
-        'Resolvido': '#10b981',
-        'Negativação': '#ec4899',
-        'Em Cartório': '#ef4444'
+        'Aberto': '#586066',
+        'Pendente': '#b57f00',
+        'Primeiro Contato': '#0d5b63',
+        'Em Negociação': '#1f6fd4',
+        'Aguardando Pagamento': '#0a474d',
+        'Resolvido': '#1a9455',
+        'Negativação': '#cf3a2c',
+        'Em Cartório': '#991b1b'
     };
-    const PALETA_FALLBACK = ['#22d3ee','#f472b6','#facc15','#4ade80','#c084fc','#fb923c','#60a5fa','#94a3b8'];
+    const PALETA_FALLBACK = ['#0d5b63','#1a9455','#b57f00','#1f6fd4','#cf3a2c','#586066'];
     const CORES_CLASSE = {
-        'Classe VIP': '#eab308',
-        'Classe A': '#10b981',
-        'Classe B': '#38bdf8',
-        'Classe C': '#a855f7',
-        'Sem classe': '#64748b'
+        'Classe VIP': '#b57f00',
+        'Classe A': '#1a9455',
+        'Classe B': '#1f6fd4',
+        'Classe C': '#0d5b63',
+        'Sem classe': '#8a939a'
     };
 
-    // Estado global
     let DADOS = [];
     let selKeyAtual = null;
     let devedoresAtual = [];
     let chartInad = null, chartRecup = null, chartRosca = null, chartRoscaClasse = null;
 
-    /* ============================================================
-       FORMATAÇÃO
-       ============================================================ */
     const formatBRL = (val) => 'R$ ' + (Number(val) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatDecimal = (val) => (Number(val) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -410,20 +447,17 @@
 
     function limparNome(raw) {
         const s = String(raw == null ? '' : raw).trim();
-        const semId = s.replace(/^\s*\d+\s+/, '').trim(); // remove o "[ID] " inicial
-        return semId || s || '—';
+        return s.replace(/^\s*\d+\s+/, '').trim() || s || '—';
     }
+
     function limparClasse(raw) {
         let s = String(raw == null ? '' : raw).trim();
         if (!s) return 'Sem classe';
         const i = s.indexOf('::');
-        if (i > -1) s = s.slice(0, i).trim(); // "Classe A ::" -> "Classe A"
+        if (i > -1) s = s.slice(0, i).trim();
         return s || 'Sem classe';
     }
 
-    /* ============================================================
-       PARSE DE VALORES/DATAS DO GVIZ
-       ============================================================ */
     function parseBRDate(str) {
         if (!str) return null;
         const m = String(str).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
@@ -441,9 +475,7 @@
         if (v instanceof Date) return v;
         if (typeof v === 'string') {
             const m = v.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
-            if (m) {
-                return new Date(+m[1], +m[2], +m[3], m[4] ? +m[4] : 0, m[5] ? +m[5] : 0, m[6] ? +m[6] : 0);
-            }
+            if (m) return new Date(+m[1], +m[2], +m[3], m[4] ? +m[4] : 0, m[5] ? +m[5] : 0, m[6] ? +m[6] : 0);
             return parseBRDate(v);
         }
         return null;
@@ -451,43 +483,33 @@
 
     function parseNum(cell) {
         if (!cell) return 0;
-        let v = cell.v;
-        if (v == null || v === '') { v = cell.f; }
+        let v = cell.v == null || cell.v === '' ? cell.f : cell.v;
         if (v == null || v === '') return 0;
         if (typeof v === 'number') return v;
         let s = String(v).replace(/[^\d,.-]/g, '');
         if (s === '' || s === '-') return 0;
-        if (s.indexOf(',') > -1) { s = s.replace(/\./g, '').replace(',', '.'); }
+        if (s.indexOf(',') > -1) s = s.replace(/\./g, '').replace(',', '.');
         const n = parseFloat(s);
         return isNaN(n) ? 0 : n;
     }
 
-    /* ============================================================
-       OVERLAY (carregando / erro)
-       ============================================================ */
     function mostrarCarregando() {
-        const o = document.getElementById('overlay');
         document.getElementById('overlay-loading').classList.remove('hidden');
         document.getElementById('overlay-error').classList.add('hidden');
-        o.classList.remove('hidden');
-        o.style.display = 'flex';
+        document.getElementById('overlay').style.display = 'flex';
     }
+
     function esconderCarregando() {
-        const o = document.getElementById('overlay');
-        o.style.display = 'none';
+        document.getElementById('overlay').style.display = 'none';
     }
+
     function mostrarErro(msg) {
-        const o = document.getElementById('overlay');
         document.getElementById('overlay-loading').classList.add('hidden');
         document.getElementById('overlay-error').classList.remove('hidden');
         document.getElementById('overlay-error-msg').textContent = msg || 'Erro desconhecido.';
-        o.classList.remove('hidden');
-        o.style.display = 'flex';
+        document.getElementById('overlay').style.display = 'flex';
     }
 
-    /* ============================================================
-       CARREGAMENTO DOS DADOS (gviz via JSONP)
-       ============================================================ */
     function carregarDados() {
         mostrarCarregando();
         const cb = 'gvizCb_' + Math.floor(Math.random() * 1e9);
@@ -501,30 +523,28 @@
             try { delete window[cb]; } catch (e) { window[cb] = undefined; }
             if (script.parentNode) script.parentNode.removeChild(script);
         };
+
         const timer = setTimeout(() => {
             if (done) return; done = true; limpar();
-            mostrarErro('Tempo de conexão esgotado. Confirme que a planilha está publicada na web e compartilhada como "qualquer pessoa com o link pode ver".');
+            mostrarErro('Tempo de conexão esgotado. Verifique o compartilhamento da planilha.');
         }, 20000);
 
         window[cb] = function (resp) {
             if (done) return; done = true; clearTimeout(timer); limpar();
             try {
                 if (!resp || !resp.table) { mostrarErro('Resposta inválida da planilha.'); return; }
-                if (resp.status === 'error') {
-                    const msg = (resp.errors && resp.errors[0] && (resp.errors[0].detailed_message || resp.errors[0].message)) || 'Erro ao acessar a planilha.';
-                    mostrarErro(msg); return;
-                }
                 DADOS = processarTabela(resp.table);
-                if (!DADOS.length) { mostrarErro('Nenhum registro de cobrança foi encontrado na planilha base_cobranca.'); return; }
+                if (!DADOS.length) { mostrarErro('Nenhum registro encontrado.'); return; }
                 inicializarPainel();
                 esconderCarregando();
             } catch (err) {
-                mostrarErro('Falha ao processar os dados: ' + err.message);
+                mostrarErro('Falha ao processar dados: ' + err.message);
             }
         };
+
         script.onerror = function () {
             if (done) return; done = true; clearTimeout(timer); limpar();
-            mostrarErro('Não foi possível carregar os dados. Verifique a conexão com a internet e o compartilhamento da planilha.');
+            mostrarErro('Falha de rede ao acessar os dados.');
         };
         script.src = url;
         document.head.appendChild(script);
@@ -541,9 +561,7 @@
             const valorOriginal = parseNum(cell(10));
             const saldo = parseNum(cell(12));
 
-            if (/^cliente$/i.test(clienteRaw.trim())) continue;      // linha de cabeçalho
-            if (!clienteRaw.trim() && valorOriginal === 0 && saldo === 0) continue; // linha vazia
-            if (valorOriginal === 0 && saldo === 0) continue;        // sem dívida
+            if (/^cliente$/i.test(clienteRaw.trim()) || (valorOriginal === 0 && saldo === 0)) continue;
 
             out.push({
                 clienteRaw: clienteRaw.trim(),
@@ -564,21 +582,11 @@
         return out;
     }
 
-    /* ============================================================
-       UTILITÁRIOS DE PERÍODO (chave = ano*12 + mês, 0=Jan)
-       ============================================================ */
     function chaveDeData(d) { return d.getFullYear() * 12 + d.getMonth(); }
     function chaveAgora() { const d = new Date(); return d.getFullYear() * 12 + d.getMonth(); }
-    function fimDoMes(selKey) {
-        const y = Math.floor(selKey / 12), m = selKey % 12;
-        return new Date(y, m + 1, 0, 23, 59, 59, 999); // último dia do mês
-    }
-    function keyToMMYYYY(k) {
-        const y = Math.floor(k / 12), m = k % 12;
-        return String(m + 1).padStart(2, '0') + '/' + y;
-    }
+    function fimDoMes(selKey) { return new Date(Math.floor(selKey / 12), (selKey % 12) + 1, 0, 23, 59, 59, 999); }
+    function keyToMMYYYY(k) { return String((k % 12) + 1).padStart(2, '0') + '/' + Math.floor(k / 12); }
 
-    // Empresa normalizada para os cartões
     function empresaDe(row) {
         const e = row.empresaKey;
         if (e.indexOf('BELT') > -1) return 'BELT';
@@ -587,46 +595,25 @@
         return e || 'OUTRAS';
     }
 
-    // Um título está "em aberto" (inadimplente) na visão de uma data de referência,
-    // ANCORADO na Data de Vencimento (Coluna I): venceu até o último dia do mês selecionado
-    // e ainda não foi liquidado até essa data (Coluna J vazia OU posterior ao mês selecionado).
     function estaEmAberto(row, refEnd) {
-        if (!row.dtVenc || row.dtVenc.getTime() > refEnd.getTime()) return false; // não venceu até a data de ref.
-        if (row.dtLiq && row.dtLiq.getTime() <= refEnd.getTime()) return false;    // já liquidado até a data
+        if (!row.dtVenc || row.dtVenc.getTime() > refEnd.getTime()) return false;
+        if (row.dtLiq && row.dtLiq.getTime() <= refEnd.getTime()) return false;
         return true;
     }
 
-    // Situação do título na visão da data de referência.
-    // Se a liquidação (Coluna J) for POSTERIOR ao mês selecionado, o pagamento é ignorado
-    // e, naquela época, o título contava como "Aguardando Pagamento".
     function situacaoNaData(row, refEnd) {
         if (row.dtLiq && row.dtLiq.getTime() > refEnd.getTime()) return 'Aguardando Pagamento';
         return row.situacao || 'Sem situação';
     }
 
-    // Valor da dívida de um título em aberto = Coluna K (Valor Original).
-    function valorDevido(row) {
-        return row.valorOriginal > 0 ? row.valorOriginal : row.saldo;
-    }
-
-    // Saldo a Receber (Coluna M) do título na visão da data de referência.
-    // Se o pagamento é posterior ao mês selecionado, na época o saldo era o valor cheio (K);
-    // caso contrário usa a própria Coluna M (que, sem pagamento, é igual ao Valor Original).
+    function valorDevido(row) { return row.valorOriginal > 0 ? row.valorOriginal : row.saldo; }
     function saldoEmAberto(row, refEnd) {
-        if (row.dtLiq && row.dtLiq.getTime() > refEnd.getTime()) {
-            return row.valorOriginal > 0 ? row.valorOriginal : row.saldo;
-        }
+        if (row.dtLiq && row.dtLiq.getTime() > refEnd.getTime()) return row.valorOriginal > 0 ? row.valorOriginal : row.saldo;
         return row.saldo > 0 ? row.saldo : row.valorOriginal;
     }
 
-    /* ============================================================
-       RENDERIZAÇÃO — CARTÕES (KPIs)
-       ============================================================ */
     function setText(id, txt) { const el = document.getElementById(id); if (el) el.textContent = txt; }
-    function rotuloTitulos(q) { return q + (q === 1 ? ' título em aberto' : ' títulos em aberto'); }
 
-    // Agrega (valor devido + quantidade) dos títulos em aberto de um mês, por empresa.
-    // Reutilizado para comparar o mês selecionado com o mês imediatamente anterior.
     function agregadosDoMes(selKey) {
         const refEnd = fimDoMes(selKey);
         const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
@@ -639,40 +626,24 @@
         };
     }
 
-    // Seta/Símbolo de tendência exibido antes do valor:
-    //   • seta vermelha para cima (↑) -> valor MAIOR que o mês anterior
-    //   • seta verde para baixo (↓) -> valor MENOR que o mês anterior
-    //   • '=' em amarelo -> valor IGUAL ao mês anterior
     function atualizarSetaTendencia(id, valorAtual, valorAnterior) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.className = 'text-base font-bold shrink-0'; // limpa estilos anteriores
-        
-        // Comparação com precisão de centavos
         const vAtual = Math.round((valorAtual || 0) * 100);
         const vAnt = Math.round((valorAnterior || 0) * 100);
 
         if (vAtual > vAnt) {
-            el.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
-            el.className += ' text-red-500';
-            el.title = 'Valor maior que o mês anterior';
-            el.style.display = 'inline-block';
+            el.innerHTML = '<i class="fa-solid fa-arrow-up" style="color:var(--red);"></i>';
         } else if (vAtual < vAnt) {
-            el.innerHTML = '<i class="fa-solid fa-arrow-down"></i>';
-            el.className += ' text-emerald-500';
-            el.title = 'Valor menor que o mês anterior';
-            el.style.display = 'inline-block';
+            el.innerHTML = '<i class="fa-solid fa-arrow-down" style="color:var(--green);"></i>';
         } else {
-            el.innerHTML = '=';
-            el.className += ' text-yellow-400 font-extrabold text-lg';
-            el.title = 'Sem mudança de valor em comparação com o mês anterior';
-            el.style.display = 'inline-block';
+            el.innerHTML = '<b style="color:var(--amber);">=</b>';
         }
     }
 
     function aplicarKPI(prefixo, atual, anterior) {
         setText('kpi-' + prefixo + '-val', formatBRL(atual.val));
-        setText('kpi-' + prefixo + '-qty', rotuloTitulos(atual.qtd));
+        setText('kpi-' + prefixo + '-qty', atual.qtd + (atual.qtd === 1 ? ' título em aberto' : ' títulos em aberto'));
         atualizarSetaTendencia('kpi-' + prefixo + '-arrow', atual.val, anterior.val);
     }
 
@@ -685,13 +656,10 @@
         aplicarKPI('mbk',   atual.mbk,   anterior.mbk);
     }
 
-    /* ============================================================
-       RENDERIZAÇÃO — GRÁFICO DE ROSCA (situação)
-       ============================================================ */
     const opcoesRosca = {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '68%',
+        cutout: '70%',
         plugins: {
             legend: { display: false },
             tooltip: { callbacks: { label: (ctx) => ' ' + ctx.label + ': ' + formatBRL(ctx.raw) } },
@@ -702,141 +670,100 @@
     function renderRosca(selKey) {
         const refEnd = fimDoMes(selKey);
         const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
-
         const mapa = {};
         abertos.forEach(r => {
             const s = situacaoNaData(r, refEnd);
             mapa[s] = (mapa[s] || 0) + valorDevido(r);
         });
 
-        let dados = Object.keys(mapa).map(k => ({ label: k, value: mapa[k] }));
-        dados = dados.filter(d => d.value > 0).sort((a, b) => b.value - a.value);
-
+        let dados = Object.keys(mapa).map(k => ({ label: k, value: mapa[k] })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
         let fb = 0;
         dados.forEach(d => { d.color = CORES_SITUACAO[d.label] || PALETA_FALLBACK[fb++ % PALETA_FALLBACK.length]; });
         const totalVal = dados.reduce((s, d) => s + d.value, 0);
 
-        if (chartRosca) { chartRosca.destroy(); chartRosca = null; }
+        if (chartRosca) chartRosca.destroy();
         const ctx = document.getElementById('situacaoDoughnutChart');
         const legend = document.getElementById('situacao-legend-container');
         legend.innerHTML = '';
 
-        if (!dados.length || totalVal <= 0) {
-            legend.innerHTML = '<div class="text-xs text-slate-500 p-3 rounded-xl bg-slate-900/60 border border-slate-800">Nenhuma inadimplência em aberto neste período.</div>';
-            chartRosca = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#1e293b'], borderWidth: 0 }] },
-                options: Object.assign({}, opcoesRosca, { plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } } })
-            });
+        if (!dados.length) {
+            chartRosca = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#dde3e6'] }] }, options: opcoesRosca });
             return;
         }
 
         chartRosca = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: dados.map(d => d.label),
-                datasets: [{
-                    data: dados.map(d => d.value),
-                    backgroundColor: dados.map(d => d.color),
-                    borderWidth: 2,
-                    borderColor: '#0f172a',
-                    hoverOffset: 6
-                }]
-            },
+            data: { labels: dados.map(d => d.label), datasets: [{ data: dados.map(d => d.value), backgroundColor: dados.map(d => d.color), borderWidth: 2, borderColor: '#fff' }] },
             options: opcoesRosca
         });
 
         dados.forEach(item => {
             const pct = ((item.value / totalVal) * 100).toFixed(1);
-            const html =
-                '<div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">' +
-                    '<div class="flex items-center space-x-3 min-w-0">' +
-                        '<div class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color:' + item.color + '"></div>' +
-                        '<span class="text-xs font-semibold text-slate-200 truncate">' + item.label + '</span>' +
-                    '</div>' +
-                    '<div class="text-right shrink-0 ml-3">' +
-                        '<span class="text-xs font-bold text-white block">' + formatBRL(item.value) + '</span>' +
-                        '<span class="text-[10px] text-slate-400 block">' + pct + '% do total</span>' +
-                    '</div>' +
-                '</div>';
-            legend.insertAdjacentHTML('beforeend', html);
+            legend.insertAdjacentHTML('beforeend', `
+                <div class="legend-item">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="width:10px; height:10px; border-radius:50%; background:${item.color};"></span>
+                        <span style="font-weight:600; color:var(--ink);">${item.label}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <b style="color:var(--ink);">${formatBRL(item.value)}</b>
+                        <small style="display:block; color:var(--ink-3);">${pct}%</small>
+                    </div>
+                </div>
+            `);
         });
     }
 
-    /* ============================================================
-       RENDERIZAÇÃO — GRÁFICO DE ROSCA (classe) — base Coluna M (Saldo a Receber)
-       ============================================================ */
     function renderRoscaClasse(selKey) {
         const refEnd = fimDoMes(selKey);
         const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
-
         const mapa = {};
         abertos.forEach(r => {
             const cl = r.classe || 'Sem classe';
             mapa[cl] = (mapa[cl] || 0) + saldoEmAberto(r, refEnd);
         });
 
-        let dados = Object.keys(mapa).map(k => ({ label: k, value: mapa[k] }));
-        dados = dados.filter(d => d.value > 0).sort((a, b) => b.value - a.value);
-
+        let dados = Object.keys(mapa).map(k => ({ label: k, value: mapa[k] })).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
         let fb = 0;
         dados.forEach(d => { d.color = CORES_CLASSE[d.label] || PALETA_FALLBACK[fb++ % PALETA_FALLBACK.length]; });
         const totalVal = dados.reduce((s, d) => s + d.value, 0);
 
-        if (chartRoscaClasse) { chartRoscaClasse.destroy(); chartRoscaClasse = null; }
+        if (chartRoscaClasse) chartRoscaClasse.destroy();
         const ctx = document.getElementById('classeDoughnutChart');
         const legend = document.getElementById('classe-legend-container');
         legend.innerHTML = '';
 
-        if (!dados.length || totalVal <= 0) {
-            legend.innerHTML = '<div class="text-xs text-slate-500 p-3 rounded-xl bg-slate-900/60 border border-slate-800">Nenhuma inadimplência em aberto neste período.</div>';
-            chartRoscaClasse = new Chart(ctx, {
-                type: 'doughnut',
-                data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#1e293b'], borderWidth: 0 }] },
-                options: Object.assign({}, opcoesRosca, { plugins: { legend: { display: false }, tooltip: { enabled: false }, datalabels: { display: false } } })
-            });
+        if (!dados.length) {
+            chartRoscaClasse = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#dde3e6'] }] }, options: opcoesRosca });
             return;
         }
 
         chartRoscaClasse = new Chart(ctx, {
             type: 'doughnut',
-            data: {
-                labels: dados.map(d => d.label),
-                datasets: [{
-                    data: dados.map(d => d.value),
-                    backgroundColor: dados.map(d => d.color),
-                    borderWidth: 2,
-                    borderColor: '#0f172a',
-                    hoverOffset: 6
-                }]
-            },
+            data: { labels: dados.map(d => d.label), datasets: [{ data: dados.map(d => d.value), backgroundColor: dados.map(d => d.color), borderWidth: 2, borderColor: '#fff' }] },
             options: opcoesRosca
         });
 
         dados.forEach(item => {
             const pct = ((item.value / totalVal) * 100).toFixed(1);
-            const html =
-                '<div class="flex items-center justify-between p-3 rounded-xl bg-slate-900/60 border border-slate-800">' +
-                    '<div class="flex items-center space-x-3 min-w-0">' +
-                        '<div class="w-3.5 h-3.5 rounded-full shrink-0" style="background-color:' + item.color + '"></div>' +
-                        '<span class="text-xs font-semibold text-slate-200 truncate">' + item.label + '</span>' +
-                    '</div>' +
-                    '<div class="text-right shrink-0 ml-3">' +
-                        '<span class="text-xs font-bold text-white block">' + formatBRL(item.value) + '</span>' +
-                        '<span class="text-[10px] text-slate-400 block">' + pct + '% do total</span>' +
-                    '</div>' +
-                '</div>';
-            legend.insertAdjacentHTML('beforeend', html);
+            legend.insertAdjacentHTML('beforeend', `
+                <div class="legend-item">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="width:10px; height:10px; border-radius:50%; background:${item.color};"></span>
+                        <span style="font-weight:600; color:var(--ink);">${item.label}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <b style="color:var(--ink);">${formatBRL(item.value)}</b>
+                        <small style="display:block; color:var(--ink-3);">${pct}%</small>
+                    </div>
+                </div>
+            `);
         });
     }
 
-    /* ============================================================
-       RENDERIZAÇÃO — TABELA DE DEVEDORES
-       ============================================================ */
     function renderTabela(selKey) {
         const refEnd = fimDoMes(selKey);
         const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
-
         const mapa = {};
         abertos.forEach(r => {
             const key = r.clienteRaw || r.clienteNome;
@@ -863,82 +790,71 @@
         const tbody = document.getElementById('devedores-table-body');
         tbody.innerHTML = '';
         if (!data.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-slate-500 text-xs">Nenhum devedor encontrado.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--ink-3);">Nenhum devedor encontrado.</td></tr>';
             return;
         }
-        const frag = document.createDocumentFragment();
         data.forEach((item, index) => {
             const tr = document.createElement('tr');
-            tr.className = 'hover:bg-slate-800/40 transition-colors';
-            tr.innerHTML =
-                '<td class="py-3.5 px-4 font-semibold text-slate-400 text-xs text-center">' + (index + 1) + '</td>' +
-                '<td class="py-3.5 px-4 font-medium text-slate-200">' + item.nome + '</td>' +
-                '<td class="py-3.5 px-4 text-xs font-mono text-slate-400">' + item.doc + '</td>' +
-                '<td class="py-3.5 px-4 text-center"><span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-800 text-slate-300 border border-slate-700">' + item.qtd + '</span></td>' +
-                '<td class="py-3.5 px-4 text-right font-bold text-white">' + formatBRL(item.valor) + '</td>';
-            frag.appendChild(tr);
+            tr.innerHTML = `
+                <td style="text-align:center; color:var(--ink-2); font-weight:600;">${index + 1}</td>
+                <td style="font-weight:600; color:var(--ink);">${item.nome}</td>
+                <td style="font-family:var(--num); color:var(--ink-2);">${item.doc}</td>
+                <td style="text-align:center;"><span style="background:var(--surface-2); border:1px solid var(--line-2); padding:2px 8px; border-radius:12px; font-weight:600; font-size:12px;">${item.qtd}</span></td>
+                <td class="num" style="text-align:right; color:var(--ink);">${formatBRL(item.valor)}</td>
+            `;
+            tbody.appendChild(tr);
         });
-        tbody.appendChild(frag);
     }
 
-    /* ============================================================
-       RENDERIZAÇÃO — GRÁFICOS DE BARRAS (sem eixo Y, valor no topo)
-       ============================================================ */
-    // Agrupa por mês (últimos 12 meses até selKey) e por ano (mais antigos que 12 meses)
     function agruparBarras(selKey, tipo) {
         const startKey = selKey - 11;
         const meses = {}, anos = {};
         DADOS.forEach(r => {
-            let d, val;
-            if (tipo === 'inad') { d = r.dtVenc; val = r.valorOriginal; }               // Coluna I — Data de Vencimento
-            else { d = r.dtLiq; val = (r.valorPago > 0 ? r.valorPago : r.valorOriginal); } // Coluna J — Data de Liquidação
+            let d = (tipo === 'inad' ? r.dtVenc : r.dtLiq);
+            let val = (tipo === 'inad' ? r.valorOriginal : (r.valorPago > 0 ? r.valorPago : r.valorOriginal));
             if (!d || !(val > 0)) return;
             const k = chaveDeData(d);
-            if (k > selKey) return; // futuro em relação ao período analisado
-            if (k >= startKey) { meses[k] = (meses[k] || 0) + val; }
-            else { const y = d.getFullYear(); anos[y] = (anos[y] || 0) + val; }
+            if (k > selKey) return;
+            if (k >= startKey) meses[k] = (meses[k] || 0) + val;
+            else anos[d.getFullYear()] = (anos[d.getFullYear()] || 0) + val;
         });
 
         const labels = [], values = [];
         Object.keys(anos).map(Number).sort((a, b) => a - b).forEach(y => { labels.push(String(y)); values.push(anos[y]); });
         for (let k = startKey; k <= selKey; k++) { labels.push(keyToMMYYYY(k)); values.push(meses[k] || 0); }
-        return { labels: labels, values: values };
+        return { labels, values };
     }
 
     function opcoesBarra(rotulo) {
         return {
             responsive: true,
             maintainAspectRatio: false,
-            layout: { padding: { top: 18 } },
+            layout: { padding: { top: 20 } },
             plugins: {
                 legend: { display: false },
                 tooltip: { callbacks: { label: (ctx) => ' ' + rotulo + ': ' + formatBRL(ctx.raw) } },
                 datalabels: {
                     anchor: 'end', align: 'top', offset: 4, rotation: -90, clamp: true,
-                    color: '#e2e8f0', font: { size: 9, weight: '700' },
+                    color: '#586066', font: { size: 9, weight: '700' },
                     formatter: (v) => v > 0 ? formatDecimal(v) : ''
                 }
             },
             scales: {
                 y: { display: false, beginAtZero: true, grace: '35%' },
-                x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 9 }, autoSkip: false, maxRotation: 80, minRotation: 0 } }
+                x: { grid: { display: false }, ticks: { color: '#586066', font: { size: 10 }, autoSkip: false } }
             }
         };
     }
 
     function renderBarChart(canvasId, innerId, dataset, corAno, corMes, rotulo) {
         const inner = document.getElementById(innerId);
-        const scroll = inner.parentElement;
-        const largura = Math.max(scroll.clientWidth, dataset.labels.length * 52);
+        const largura = Math.max(inner.parentElement.clientWidth, dataset.labels.length * 52);
         inner.style.width = largura + 'px';
 
         const cores = dataset.labels.map(l => (l.length === 4 ? corAno : corMes));
         return new Chart(document.getElementById(canvasId), {
             type: 'bar',
-            data: {
-                labels: dataset.labels,
-                datasets: [{ data: dataset.values, backgroundColor: cores, borderRadius: 4, maxBarThickness: 46 }]
-            },
+            data: { labels: dataset.labels, datasets: [{ data: dataset.values, backgroundColor: cores, borderRadius: 4, maxBarThickness: 40 }] },
             options: opcoesBarra(rotulo)
         });
     }
@@ -946,15 +862,12 @@
     function renderBarras(selKey) {
         const inad = agruparBarras(selKey, 'inad');
         const recup = agruparBarras(selKey, 'recup');
-        if (chartInad) { chartInad.destroy(); chartInad = null; }
-        if (chartRecup) { chartRecup.destroy(); chartRecup = null; }
-        chartInad = renderBarChart('inadimplenciaChart', 'inad-inner', inad, '#ef4444', '#f59e0b', 'Inadimplência');
-        chartRecup = renderBarChart('recuperadoChart', 'recup-inner', recup, '#10b981', '#38bdf8', 'Recuperado');
+        if (chartInad) chartInad.destroy();
+        if (chartRecup) chartRecup.destroy();
+        chartInad = renderBarChart('inadimplenciaChart', 'inad-inner', inad, '#cf3a2c', '#b57f00', 'Inadimplência');
+        chartRecup = renderBarChart('recuperadoChart', 'recup-inner', recup, '#1a9455', '#0d5b63', 'Recuperado');
     }
 
-    /* ============================================================
-       SELETOR DE MESES (MMMM/AAAA)
-       ============================================================ */
     function construirSeletorMeses() {
         let minKey = Infinity, maxKey = -Infinity;
         DADOS.forEach(r => {
@@ -969,32 +882,23 @@
         const sel = document.getElementById('select-mes-ano');
         sel.innerHTML = '';
         for (let k = topo; k >= minKey; k--) {
-            const y = Math.floor(k / 12), m = k % 12;
             const opt = document.createElement('option');
             opt.value = String(k);
-            opt.textContent = MESES[m] + '/' + y;
-            opt.className = 'bg-slate-900 text-white';
+            opt.textContent = MESES[k % 12] + '/' + Math.floor(k / 12);
             sel.appendChild(opt);
         }
     }
 
     function mesPadrao() {
         const sel = document.getElementById('select-mes-ano');
-        const opts = Array.prototype.map.call(sel.options, o => parseInt(o.value, 10));
+        const opts = Array.from(sel.options).map(o => parseInt(o.value, 10));
         const nowK = chaveAgora();
-        if (opts.indexOf(nowK) > -1) return nowK;   // mês atual, se disponível
-        return opts.length ? opts[0] : nowK;        // senão, o mais recente
+        return opts.includes(nowK) ? nowK : (opts.length ? opts[0] : nowK);
     }
 
-    /* ============================================================
-       ORQUESTRAÇÃO
-       ============================================================ */
     function atualizarCarimbo() {
-        const agora = new Date();
-        const hh = String(agora.getHours()).padStart(2, '0');
-        const mm = String(agora.getMinutes()).padStart(2, '0');
-        const ss = String(agora.getSeconds()).padStart(2, '0');
-        setText('carimbo', 'Dados atualizados às ' + hh + ':' + mm + ':' + ss);
+        const d = new Date();
+        setText('carimbo', 'Atualizado às ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'));
     }
 
     function atualizarTudo(selKey) {
@@ -1016,22 +920,16 @@
         construirSeletorMeses();
         const selKey = (selKeyAtual != null) ? selKeyAtual : mesPadrao();
         selKeyAtual = selKey;
-        const sel = document.getElementById('select-mes-ano');
-        sel.value = String(selKey);
-        if (sel.value !== String(selKey) && sel.options.length) { sel.selectedIndex = 0; selKeyAtual = parseInt(sel.value, 10); }
-        atualizarTudo(selKeyAtual);
+        document.getElementById('select-mes-ano').value = String(selKey);
+        atualizarTudo(selKey);
     }
 
-    /* ============================================================
-       PLUGINS E INICIALIZAÇÃO
-       ============================================================ */
-    // Texto central da rosca (total em aberto)
     const pluginTextoCentral = {
         id: 'textoCentral',
         afterDraw(chart) {
             if (chart.config.type !== 'doughnut') return;
             const ds = chart.data.datasets[0];
-            if (!ds || (ds.backgroundColor && ds.backgroundColor[0] === '#1e293b')) return; // estado "sem dados"
+            if (!ds || ds.backgroundColor[0] === '#dde3e6') return;
             const area = chart.chartArea; if (!area) return;
             const total = ds.data.reduce((s, v) => s + (Number(v) || 0), 0);
             if (!(total > 0)) return;
@@ -1039,10 +937,10 @@
             const ctx = chart.ctx;
             ctx.save();
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillStyle = '#94a3b8'; ctx.font = '600 10px Inter, sans-serif';
-            ctx.fillText('Total em aberto', cx, cy - 12);
-            ctx.fillStyle = '#f8fafc'; ctx.font = '700 15px Inter, sans-serif';
-            ctx.fillText(formatBRL(total), cx, cy + 7);
+            ctx.fillStyle = '#586066'; ctx.font = '600 10px IBM Plex Sans, sans-serif';
+            ctx.fillText('Total em aberto', cx, cy - 10);
+            ctx.fillStyle = '#16191c'; ctx.font = '700 14px Space Grotesk, sans-serif';
+            ctx.fillText(formatBRL(total), cx, cy + 8);
             ctx.restore();
         }
     };
@@ -1050,68 +948,28 @@
     Chart.register(ChartDataLabels);
     Chart.register(pluginTextoCentral);
 
-    // Re-renderiza os gráficos de barras ao redimensionar (recalcula largura)
-    let rzTimer = null;
-    window.addEventListener('resize', () => {
-        clearTimeout(rzTimer);
-        rzTimer = setTimeout(() => { if (selKeyAtual != null && DADOS.length) renderBarras(selKeyAtual); }, 250);
-    });
-
     document.addEventListener('DOMContentLoaded', () => {
-        const s = document.getElementById('table-search');
-        if (s) s.addEventListener('input', aplicarFiltroTabela);
+        document.getElementById('table-search').addEventListener('input', aplicarFiltroTabela);
         carregarDados();
     });
-    </script>
-    <script>
-      /* Registro do Service Worker (necessário para instalar como app e para uso offline do layout) */
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function () {
-          navigator.serviceWorker.register('sw.js').catch(function (err) {
-            console.warn('Falha ao registrar o service worker:', err);
-          });
-        });
-      }
 
-      /* ---- Instalação como aplicativo (PWA) ---- */
-      var deferredPrompt = null;
-      var btnInstalar = null;
-
-      function mostrarBotaoInstalar() {
-        if (!btnInstalar) btnInstalar = document.getElementById('btn-instalar');
-        if (btnInstalar) { btnInstalar.classList.remove('hidden'); btnInstalar.classList.add('flex'); }
-      }
-      function esconderBotaoInstalar() {
-        if (!btnInstalar) btnInstalar = document.getElementById('btn-instalar');
-        if (btnInstalar) { btnInstalar.classList.add('hidden'); btnInstalar.classList.remove('flex'); }
-      }
-
-      // O Chrome só dispara este evento se o app atender aos critérios de instalação
-      // (HTTPS + manifest válido + ícones acessíveis + service worker). Se não disparar,
-      // o navegador oferece apenas "atalho" em vez de instalar o app.
-      window.addEventListener('beforeinstallprompt', function (e) {
+    /* PWA */
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        mostrarBotaoInstalar();
-      });
+        document.getElementById('btn-instalar').classList.remove('hidden');
+    });
 
-      function instalarApp() {
-        if (!deferredPrompt) {
-          alert('Para instalar: abra pelo Chrome no endereço https do GitHub Pages e use o menu (⋮) › "Instalar app". Se só aparecer "Adicionar à tela inicial", verifique se a pasta  e o manifest.json foram enviados ao repositório.');
-          return;
+    function instalarApp() {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.finally(() => {
+                deferredPrompt = null;
+                document.getElementById('btn-instalar').classList.add('hidden');
+            });
         }
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.finally(function () {
-          deferredPrompt = null;
-          esconderBotaoInstalar();
-        });
-      }
-
-      // Já instalado / rodando em modo standalone: não mostra o botão
-      window.addEventListener('appinstalled', function () { deferredPrompt = null; esconderBotaoInstalar(); });
-      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-        esconderBotaoInstalar();
-      }
+    }
     </script>
 </body>
 </html>
