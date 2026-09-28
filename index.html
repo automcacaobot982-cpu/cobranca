@@ -124,6 +124,18 @@
         .kpi-b3 .kpi-icon { background: #e8f1fd; color: #1f6fd4; }
         .kpi-mbk .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
 
+        /* Cartões de prazo médio por classe */
+        .kpi-card.kpi-cTotal::before { background: #16191c; }
+        .kpi-card.kpi-cA::before { background: #1a9455; }
+        .kpi-card.kpi-cB::before { background: #1f6fd4; }
+        .kpi-card.kpi-cC::before { background: #0d5b63; }
+        .kpi-card.kpi-cVIP::before { background: #b57f00; }
+        .kpi-cTotal .kpi-icon { background: #e6e8ea; color: #16191c; }
+        .kpi-cA .kpi-icon { background: var(--green-tint); color: var(--green); }
+        .kpi-cB .kpi-icon { background: #e8f1fd; color: #1f6fd4; }
+        .kpi-cC .kpi-icon { background: var(--brand-tint); color: var(--brand); }
+        .kpi-cVIP .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
+
         .kpi-body { display: flex; align-items: baseline; gap: 8px; }
         .kpi-val { font-family: var(--num); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--ink); }
         .kpi-sub { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: block; }
@@ -331,6 +343,58 @@
                         <canvas id="classeDoughnutChart"></canvas>
                     </div>
                     <div class="legend-list" id="classe-legend-container"></div>
+                </div>
+            </div>
+
+            <!-- 3.1) Prazo médio de recebimento por classe -->
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-clock" style="color:var(--brand);"></i> Prazo Médio de Recebimento</h3>
+                        <p>Média de dias entre a Data de Vencimento e a Data de Liquidação dos títulos recebidos no mês selecionado (todas as empresas)</p>
+                    </div>
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));">
+                    <div class="kpi-card kpi-cTotal">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Todas as Classes</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="prazo-total-val">—</div></div>
+                        <span class="kpi-sub" id="prazo-total-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-cA">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Classe A</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="prazo-cA-val">—</div></div>
+                        <span class="kpi-sub" id="prazo-cA-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-cB">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Classe B</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="prazo-cB-val">—</div></div>
+                        <span class="kpi-sub" id="prazo-cB-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-cC">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Classe C</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="prazo-cC-val">—</div></div>
+                        <span class="kpi-sub" id="prazo-cC-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-cVIP">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Classe VIP</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-clock"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="prazo-cVIP-val">—</div></div>
+                        <span class="kpi-sub" id="prazo-cVIP-qty">—</span>
+                    </div>
                 </div>
             </div>
 
@@ -713,6 +777,45 @@
         });
     }
 
+    // Prazo médio de recebimento (dias): diferença entre Data de Liquidação (J)
+    // e Data de Vencimento (I) dos títulos recebidos dentro do mês selecionado.
+    function mediaDiasRecebimento(arr) {
+        let soma = 0, qtd = 0;
+        arr.forEach(r => {
+            if (!r.dtLiq || !r.dtVenc) return;
+            soma += Math.round((r.dtLiq.getTime() - r.dtVenc.getTime()) / 86400000);
+            qtd += 1;
+        });
+        return { media: qtd ? soma / qtd : 0, qtd };
+    }
+
+    function aplicarPrazo(prefixo, res) {
+        let txt = '—';
+        if (res.qtd) {
+            const diasFmt = res.media.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+            txt = diasFmt + (Math.abs(res.media) === 1 ? ' dia' : ' dias');
+        }
+        setText('prazo-' + prefixo + '-val', txt);
+        setText('prazo-' + prefixo + '-qty', res.qtd + (res.qtd === 1 ? ' título recebido' : ' títulos recebidos'));
+    }
+
+    function renderPrazoMedio(selKey) {
+        const refStart = inicioDoMes(selKey);
+        const refEnd = fimDoMes(selKey);
+        const recebidos = DADOS.filter(r =>
+            r.dtLiq && r.dtVenc &&
+            r.dtLiq.getTime() >= refStart.getTime() &&
+            r.dtLiq.getTime() <= refEnd.getTime()
+        );
+        const daClasse = (cl) => recebidos.filter(r => r.classe === cl);
+
+        aplicarPrazo('total', mediaDiasRecebimento(recebidos));
+        aplicarPrazo('cA',    mediaDiasRecebimento(daClasse('Classe A')));
+        aplicarPrazo('cB',    mediaDiasRecebimento(daClasse('Classe B')));
+        aplicarPrazo('cC',    mediaDiasRecebimento(daClasse('Classe C')));
+        aplicarPrazo('cVIP',  mediaDiasRecebimento(daClasse('Classe VIP')));
+    }
+
     // Gráfico de rosca do valor recuperado (liquidado) no mês selecionado,
     // segmentado pela idade do vencimento em relação ao mês de referência.
     function renderRecupVenc(selKey) {
@@ -995,6 +1098,7 @@
         renderRecupVenc(selKey);
         renderRosca(selKey);
         renderRoscaClasse(selKey);
+        renderPrazoMedio(selKey);
         renderTabela(selKey);
         atualizarCarimbo();
     }
