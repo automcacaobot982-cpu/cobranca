@@ -316,8 +316,23 @@
             </div>
         </section>
 
-        <!-- GRÁFICOS DE ROSCA (SITUAÇÃO E CLASSE) - EMPILHADOS, LEGENDA À DIREITA -->
+        <!-- GRÁFICOS DE ROSCA (RECUPERADO POR VENCIMENTO, SITUAÇÃO E CLASSE) - EMPILHADOS, LEGENDA À DIREITA -->
         <section class="doughnut-stack">
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-hand-holding-dollar" style="color:var(--green);"></i> Recuperado por Período de Vencimento</h3>
+                        <p>Valores liquidados no mês selecionado, segmentados pela idade do vencimento</p>
+                    </div>
+                </div>
+                <div class="doughnut-row">
+                    <div class="doughnut-canvas-wrap">
+                        <canvas id="recupVencDoughnutChart"></canvas>
+                    </div>
+                    <div class="legend-list" id="recup-venc-legend-container"></div>
+                </div>
+            </div>
+
             <div class="card-panel">
                 <div class="card-head">
                     <div>
@@ -428,11 +443,18 @@
         'Classe C': '#0d5b63',
         'Sem classe': '#8a939a'
     };
+    const CORES_RECUP_VENC = {
+        'Recuperados do mês': '#1a9455',
+        'Recuperados 30 dias': '#0d5b63',
+        'Recuperado 60 dias': '#1f6fd4',
+        'Recuperado 90 dias': '#b57f00',
+        'Recuperado +90 dias': '#cf3a2c'
+    };
 
     let DADOS = [];
     let selKeyAtual = null;
     let devedoresAtual = [];
-    let chartInad = null, chartRecup = null, chartRosca = null, chartRoscaClasse = null;
+    let chartInad = null, chartRecup = null, chartRosca = null, chartRoscaClasse = null, chartRecupVenc = null;
 
     const formatBRL = (val) => 'R$ ' + (Number(val) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formatDecimal = (val) => (Number(val) || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -585,6 +607,7 @@
     function chaveDeData(d) { return d.getFullYear() * 12 + d.getMonth(); }
     function chaveAgora() { const d = new Date(); return d.getFullYear() * 12 + d.getMonth(); }
     function fimDoMes(selKey) { return new Date(Math.floor(selKey / 12), (selKey % 12) + 1, 0, 23, 59, 59, 999); }
+    function inicioDoMes(selKey) { return new Date(Math.floor(selKey / 12), selKey % 12, 1, 0, 0, 0, 0); }
     function keyToMMYYYY(k) { return String((k % 12) + 1).padStart(2, '0') + '/' + Math.floor(k / 12); }
 
     function empresaDe(row) {
@@ -667,6 +690,86 @@
         }
     };
 
+    // Preenche uma legenda lateral padrão a partir de um array {label, value, color}
+    function preencherLegenda(containerId, dados, totalVal) {
+        const legend = document.getElementById(containerId);
+        legend.innerHTML = '';
+        dados.forEach(item => {
+            const pct = totalVal > 0 ? ((item.value / totalVal) * 100).toFixed(1) : '0.0';
+            legend.insertAdjacentHTML('beforeend', `
+                <div class="legend-item">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="width:10px; height:10px; border-radius:50%; background:${item.color};"></span>
+                        <span style="font-weight:600; color:var(--ink);">${item.label}</span>
+                    </div>
+                    <div style="text-align:right;">
+                        <b style="color:var(--ink);">${formatBRL(item.value)}</b>
+                        <small style="display:block; color:var(--ink-3);">${pct}%</small>
+                    </div>
+                </div>
+            `);
+        });
+    }
+
+    // Gráfico de rosca do valor recuperado (liquidado) no mês selecionado,
+    // segmentado pela idade do vencimento em relação ao mês de referência.
+    function renderRecupVenc(selKey) {
+        const refStart = inicioDoMes(selKey);
+        const refEnd = fimDoMes(selKey);
+
+        // Liquidações ocorridas dentro do mês selecionado
+        const liquidados = DADOS.filter(r =>
+            r.dtLiq && r.dtVenc &&
+            r.dtLiq.getTime() >= refStart.getTime() &&
+            r.dtLiq.getTime() <= refEnd.getTime()
+        );
+
+        const buckets = {
+            'Recuperados do mês': 0,
+            'Recuperados 30 dias': 0,
+            'Recuperado 60 dias': 0,
+            'Recuperado 90 dias': 0,
+            'Recuperado +90 dias': 0
+        };
+
+        liquidados.forEach(r => {
+            const val = r.valorPago > 0 ? r.valorPago : (r.valorOriginal > 0 ? r.valorOriginal : r.saldo);
+            if (!(val > 0)) return;
+            // Diferença de meses entre o vencimento e o mês de referência
+            const diff = selKey - chaveDeData(r.dtVenc);
+            if (diff <= 0) buckets['Recuperados do mês'] += val;
+            else if (diff === 1) buckets['Recuperados 30 dias'] += val;
+            else if (diff === 2) buckets['Recuperado 60 dias'] += val;
+            else if (diff === 3) buckets['Recuperado 90 dias'] += val;
+            else buckets['Recuperado +90 dias'] += val;
+        });
+
+        const ordem = ['Recuperados do mês','Recuperados 30 dias','Recuperado 60 dias','Recuperado 90 dias','Recuperado +90 dias'];
+        const dados = ordem
+            .map(k => ({ label: k, value: buckets[k], color: CORES_RECUP_VENC[k] }))
+            .filter(d => d.value > 0);
+        const totalVal = dados.reduce((s, d) => s + d.value, 0);
+
+        if (chartRecupVenc) chartRecupVenc.destroy();
+        const ctx = document.getElementById('recupVencDoughnutChart');
+        const legend = document.getElementById('recup-venc-legend-container');
+        legend.innerHTML = '';
+
+        if (!dados.length) {
+            chartRecupVenc = new Chart(ctx, { type: 'doughnut', data: { labels: ['Sem dados'], datasets: [{ data: [1], backgroundColor: ['#dde3e6'] }] }, options: opcoesRosca });
+            legend.innerHTML = '<div class="legend-item" style="justify-content:center; color:var(--ink-3);">Nenhuma liquidação neste mês</div>';
+            return;
+        }
+
+        chartRecupVenc = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: dados.map(d => d.label), datasets: [{ data: dados.map(d => d.value), backgroundColor: dados.map(d => d.color), borderWidth: 2, borderColor: '#fff' }] },
+            options: opcoesRosca
+        });
+
+        preencherLegenda('recup-venc-legend-container', dados, totalVal);
+    }
+
     function renderRosca(selKey) {
         const refEnd = fimDoMes(selKey);
         const abertos = DADOS.filter(r => estaEmAberto(r, refEnd));
@@ -697,21 +800,7 @@
             options: opcoesRosca
         });
 
-        dados.forEach(item => {
-            const pct = ((item.value / totalVal) * 100).toFixed(1);
-            legend.insertAdjacentHTML('beforeend', `
-                <div class="legend-item">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="width:10px; height:10px; border-radius:50%; background:${item.color};"></span>
-                        <span style="font-weight:600; color:var(--ink);">${item.label}</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="color:var(--ink);">${formatBRL(item.value)}</b>
-                        <small style="display:block; color:var(--ink-3);">${pct}%</small>
-                    </div>
-                </div>
-            `);
-        });
+        preencherLegenda('situacao-legend-container', dados, totalVal);
     }
 
     function renderRoscaClasse(selKey) {
@@ -744,21 +833,7 @@
             options: opcoesRosca
         });
 
-        dados.forEach(item => {
-            const pct = ((item.value / totalVal) * 100).toFixed(1);
-            legend.insertAdjacentHTML('beforeend', `
-                <div class="legend-item">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="width:10px; height:10px; border-radius:50%; background:${item.color};"></span>
-                        <span style="font-weight:600; color:var(--ink);">${item.label}</span>
-                    </div>
-                    <div style="text-align:right;">
-                        <b style="color:var(--ink);">${formatBRL(item.value)}</b>
-                        <small style="display:block; color:var(--ink-3);">${pct}%</small>
-                    </div>
-                </div>
-            `);
-        });
+        preencherLegenda('classe-legend-container', dados, totalVal);
     }
 
     function renderTabela(selKey) {
@@ -905,6 +980,7 @@
         selKeyAtual = selKey;
         renderKPIs(selKey);
         renderBarras(selKey);
+        renderRecupVenc(selKey);
         renderRosca(selKey);
         renderRoscaClasse(selKey);
         renderTabela(selKey);
@@ -938,7 +1014,7 @@
             ctx.save();
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             ctx.fillStyle = '#586066'; ctx.font = '600 10px IBM Plex Sans, sans-serif';
-            ctx.fillText('Total em aberto', cx, cy - 10);
+            ctx.fillText(chart.canvas.id === 'recupVencDoughnutChart' ? 'Total recuperado' : 'Total em aberto', cx, cy - 10);
             ctx.fillStyle = '#16191c'; ctx.font = '700 14px Space Grotesk, sans-serif';
             ctx.fillText(formatBRL(total), cx, cy + 8);
             ctx.restore();
