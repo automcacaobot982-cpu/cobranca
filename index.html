@@ -291,7 +291,7 @@
                 <div class="card-head">
                     <div>
                         <h3><i class="fa-solid fa-chart-bar" style="color:var(--red);"></i> Total de Inadimplemento</h3>
-                        <p>Evolução mensal dos últimos 2 anos e visão agrupada (valores em R$)</p>
+                        <p>Somente títulos ainda não recuperados · últimos 12 meses por mês (MM/AAAA) e anteriores agrupados por ano, por Data de Vencimento (valores em R$)</p>
                     </div>
                 </div>
                 <div class="chart-scroll">
@@ -883,10 +883,20 @@
 
     function agruparBarras(selKey, tipo) {
         const startKey = selKey - 11;
+        const refEnd = fimDoMes(selKey);
         const meses = {}, anos = {};
         DADOS.forEach(r => {
-            let d = (tipo === 'inad' ? r.dtVenc : r.dtLiq);
-            let val = (tipo === 'inad' ? r.valorOriginal : (r.valorPago > 0 ? r.valorPago : r.valorOriginal));
+            let d, val;
+            if (tipo === 'inad') {
+                // Somente inadimplências ainda NÃO recuperadas na data de referência
+                // (sem liquidação até o fim do mês selecionado). Base: Data de Vencimento.
+                if (!estaEmAberto(r, refEnd)) return;
+                d = r.dtVenc;
+                val = valorDevido(r);
+            } else {
+                d = r.dtLiq;
+                val = (r.valorPago > 0 ? r.valorPago : r.valorOriginal);
+            }
             if (!d || !(val > 0)) return;
             const k = chaveDeData(d);
             if (k > selKey) return;
