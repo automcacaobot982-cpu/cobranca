@@ -285,8 +285,9 @@
             </div>
         </section>
 
-        <!-- BARRAS TEMPORAIS -->
-        <section style="display:flex; flex-direction:column; gap:20px;">
+        <!-- FLUXO: TOTAL DA DÍVIDA → SITUAÇÃO → CLASSE → RECUPERADO → RECUPERADO POR VENCIMENTO -->
+        <section class="doughnut-stack">
+            <!-- 1) Total da dívida -->
             <div class="card-panel">
                 <div class="card-head">
                     <div>
@@ -301,38 +302,7 @@
                 </div>
             </div>
 
-            <div class="card-panel">
-                <div class="card-head">
-                    <div>
-                        <h3><i class="fa-solid fa-circle-check" style="color:var(--green);"></i> Total Recuperado</h3>
-                        <p>Valores liquidados no período (valores em R$)</p>
-                    </div>
-                </div>
-                <div class="chart-scroll">
-                    <div class="chart-inner" id="recup-inner">
-                        <canvas id="recuperadoChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- GRÁFICOS DE ROSCA (RECUPERADO POR VENCIMENTO, SITUAÇÃO E CLASSE) - EMPILHADOS, LEGENDA À DIREITA -->
-        <section class="doughnut-stack">
-            <div class="card-panel">
-                <div class="card-head">
-                    <div>
-                        <h3><i class="fa-solid fa-hand-holding-dollar" style="color:var(--green);"></i> Recuperado por Período de Vencimento</h3>
-                        <p>Valores liquidados no mês selecionado, segmentados pela idade do vencimento</p>
-                    </div>
-                </div>
-                <div class="doughnut-row">
-                    <div class="doughnut-canvas-wrap">
-                        <canvas id="recupVencDoughnutChart"></canvas>
-                    </div>
-                    <div class="legend-list" id="recup-venc-legend-container"></div>
-                </div>
-            </div>
-
+            <!-- 2) Situação da dívida -->
             <div class="card-panel">
                 <div class="card-head">
                     <div>
@@ -348,6 +318,7 @@
                 </div>
             </div>
 
+            <!-- 3) Classe do cliente -->
             <div class="card-panel">
                 <div class="card-head">
                     <div>
@@ -360,6 +331,37 @@
                         <canvas id="classeDoughnutChart"></canvas>
                     </div>
                     <div class="legend-list" id="classe-legend-container"></div>
+                </div>
+            </div>
+
+            <!-- 4) Valor recuperado -->
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-circle-check" style="color:var(--green);"></i> Total Recuperado</h3>
+                        <p>Valores liquidados no período (valores em R$)</p>
+                    </div>
+                </div>
+                <div class="chart-scroll">
+                    <div class="chart-inner" id="recup-inner">
+                        <canvas id="recuperadoChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5) Recuperado por período de vencimento -->
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-hand-holding-dollar" style="color:var(--green);"></i> Recuperado por Período de Vencimento</h3>
+                        <p>Valores liquidados no mês selecionado, segmentados pela idade do vencimento</p>
+                    </div>
+                </div>
+                <div class="doughnut-row">
+                    <div class="doughnut-canvas-wrap">
+                        <canvas id="recupVencDoughnutChart"></canvas>
+                    </div>
+                    <div class="legend-list" id="recup-venc-legend-container"></div>
                 </div>
             </div>
         </section>
