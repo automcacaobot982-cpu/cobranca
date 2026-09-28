@@ -439,7 +439,7 @@
                             <div class="kpi-icon"><i class="fa-solid fa-user-tag"></i></div>
                         </div>
                         <div class="kpi-body"><div class="kpi-val" id="custo-bonif-val">R$ 0,00</div></div>
-                        <span class="kpi-sub">Bonificação ao funcionário (juros e multa)</span>
+                        <span class="kpi-sub" id="custo-bonif-pct">—</span>
                     </div>
                     <div class="kpi-card kpi-liquido">
                         <div class="kpi-header">
@@ -940,6 +940,8 @@
         setText('custo-bruto-val', formatBRL(bruto));
         setText('custo-bruto-qty', qtd + (qtd === 1 ? ' título recuperado' : ' títulos recuperados'));
         setText('custo-bonif-val', formatBRL(custo));
+        const pctCusto = bruto > 0 ? (custo / bruto) * 100 : 0;
+        setText('custo-bonif-pct', pctCusto.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '% do recuperado bruto');
         setText('custo-liquido-val', formatBRL(liquido));
     }
 
