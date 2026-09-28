@@ -136,6 +136,16 @@
         .kpi-cC .kpi-icon { background: var(--brand-tint); color: var(--brand); }
         .kpi-cVIP .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
 
+        /* Cartões de dívida envelhecida (aging) */
+        .kpi-card.kpi-age-mes::before { background: #b57f00; }
+        .kpi-card.kpi-age-30::before { background: #cf6a2c; }
+        .kpi-card.kpi-age-60::before { background: #cf3a2c; }
+        .kpi-card.kpi-age-90::before { background: #991b1b; }
+        .kpi-age-mes .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
+        .kpi-age-30 .kpi-icon { background: #fbe6d3; color: #cf6a2c; }
+        .kpi-age-60 .kpi-icon { background: var(--red-tint); color: var(--red); }
+        .kpi-age-90 .kpi-icon { background: #f6d5d5; color: #991b1b; }
+
         .kpi-body { display: flex; align-items: baseline; gap: 8px; }
         .kpi-val { font-family: var(--num); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--ink); }
         .kpi-sub { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: block; }
@@ -426,6 +436,50 @@
                         <canvas id="recupVencDoughnutChart"></canvas>
                     </div>
                     <div class="legend-list" id="recup-venc-legend-container"></div>
+                </div>
+            </div>
+
+            <!-- 6) Percentual de dívida envelhecida (aging) -->
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-hourglass-half" style="color:var(--red);"></i> Percentual de Dívida Envelhecida</h3>
+                        <p>Participação de cada faixa de atraso no total de inadimplência não resolvida (Situação ≠ Resolvido · valor da Coluna K · por Data de Vencimento)</p>
+                    </div>
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="kpi-card kpi-age-mes">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Vencimento do Mês</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-calendar-day"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="age-mes-val">—</div></div>
+                        <span class="kpi-sub" id="age-mes-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-age-30">
+                        <div class="kpi-header">
+                            <span class="kpi-label">30 Dias</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-hourglass-start"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="age-30-val">—</div></div>
+                        <span class="kpi-sub" id="age-30-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-age-60">
+                        <div class="kpi-header">
+                            <span class="kpi-label">60 Dias</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="age-60-val">—</div></div>
+                        <span class="kpi-sub" id="age-60-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-age-90">
+                        <div class="kpi-header">
+                            <span class="kpi-label">90 Dias</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-hourglass-end"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="age-90-val">—</div></div>
+                        <span class="kpi-sub" id="age-90-qty">—</span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -816,6 +870,45 @@
         aplicarPrazo('cVIP',  mediaDiasRecebimento(daClasse('Classe VIP')));
     }
 
+    // Percentual de dívida envelhecida (aging): valor não recuperado (Coluna K)
+    // de cada faixa de atraso, dividido pelo total de inadimplência não resolvida
+    // (Situação, Coluna G, diferente de "Resolvido"). Base: Data de Vencimento (I).
+    function aplicarAging(prefixo, faixa, totalK) {
+        const pct = totalK > 0 ? (faixa.v / totalK) * 100 : 0;
+        setText('age-' + prefixo + '-val', pct.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%');
+        const qtdTxt = faixa.q + (faixa.q === 1 ? ' título' : ' títulos');
+        setText('age-' + prefixo + '-qty', qtdTxt + ' · ' + formatBRL(faixa.v));
+    }
+
+    function renderEnvelhecimento(selKey) {
+        const refEnd = fimDoMes(selKey);
+        // Inadimplência não resolvida já vencida até o fim do mês selecionado
+        const naoResolvidas = DADOS.filter(r =>
+            r.dtVenc && r.dtVenc.getTime() <= refEnd.getTime() &&
+            r.situacao !== 'Resolvido' &&
+            r.valorOriginal > 0
+        );
+        const totalK = naoResolvidas.reduce((s, r) => s + r.valorOriginal, 0);
+
+        const faixas = { mes: { v: 0, q: 0 }, d30: { v: 0, q: 0 }, d60: { v: 0, q: 0 }, d90: { v: 0, q: 0 } };
+        naoResolvidas.forEach(r => {
+            const diff = selKey - chaveDeData(r.dtVenc);
+            let f = null;
+            if (diff === 0) f = 'mes';        // vencimento no mês atual
+            else if (diff === 1) f = 'd30';   // mês anterior
+            else if (diff === 2) f = 'd60';   // dois meses atrás
+            else if (diff === 3) f = 'd90';   // três meses atrás
+            if (!f) return;                    // futuros (diff<0) e +90 dias (diff>=4) não têm cartão
+            faixas[f].v += r.valorOriginal;
+            faixas[f].q += 1;
+        });
+
+        aplicarAging('mes', faixas.mes, totalK);
+        aplicarAging('30',  faixas.d30, totalK);
+        aplicarAging('60',  faixas.d60, totalK);
+        aplicarAging('90',  faixas.d90, totalK);
+    }
+
     // Gráfico de rosca do valor recuperado (liquidado) no mês selecionado,
     // segmentado pela idade do vencimento em relação ao mês de referência.
     function renderRecupVenc(selKey) {
@@ -1095,10 +1188,11 @@
         selKeyAtual = selKey;
         renderKPIs(selKey);
         renderBarras(selKey);
-        renderRecupVenc(selKey);
         renderRosca(selKey);
         renderRoscaClasse(selKey);
         renderPrazoMedio(selKey);
+        renderRecupVenc(selKey);
+        renderEnvelhecimento(selKey);
         renderTabela(selKey);
         atualizarCarimbo();
     }
