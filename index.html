@@ -146,6 +146,14 @@
         .kpi-age-60 .kpi-icon { background: var(--red-tint); color: var(--red); }
         .kpi-age-90 .kpi-icon { background: #f6d5d5; color: #991b1b; }
 
+        /* Cartões de custas de cobrança */
+        .kpi-card.kpi-bruto::before { background: #1a9455; }
+        .kpi-card.kpi-custo::before { background: #b57f00; }
+        .kpi-card.kpi-liquido::before { background: #0d5b63; }
+        .kpi-bruto .kpi-icon { background: var(--green-tint); color: var(--green); }
+        .kpi-custo .kpi-icon { background: var(--amber-bg); color: var(--amber-text); }
+        .kpi-liquido .kpi-icon { background: var(--brand-tint); color: var(--brand); }
+
         .kpi-body { display: flex; align-items: baseline; gap: 8px; }
         .kpi-val { font-family: var(--num); font-weight: 700; font-size: 26px; line-height: 1.1; color: var(--ink); }
         .kpi-sub { font-size: 12px; color: var(--ink-3); margin-top: 6px; display: block; }
@@ -404,6 +412,42 @@
                         </div>
                         <div class="kpi-body"><div class="kpi-val" id="prazo-cVIP-val">—</div></div>
                         <span class="kpi-sub" id="prazo-cVIP-qty">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3.2) Custas de cobrança (bruto, custo/bonificação, líquido) -->
+            <div class="card-panel">
+                <div class="card-head">
+                    <div>
+                        <h3><i class="fa-solid fa-scale-balanced" style="color:var(--brand);"></i> Custas de Cobrança</h3>
+                        <p>Recuperado no mês selecionado: bruto (Coluna L), bonificação ao funcionário sobre juros/multa e líquido retido pela empresa</p>
+                    </div>
+                </div>
+                <div class="kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+                    <div class="kpi-card kpi-bruto">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Recuperado Bruto</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-sack-dollar"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="custo-bruto-val">R$ 0,00</div></div>
+                        <span class="kpi-sub" id="custo-bruto-qty">—</span>
+                    </div>
+                    <div class="kpi-card kpi-custo">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Custo de Cobrança</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-user-tag"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="custo-bonif-val">R$ 0,00</div></div>
+                        <span class="kpi-sub">Bonificação ao funcionário (juros e multa)</span>
+                    </div>
+                    <div class="kpi-card kpi-liquido">
+                        <div class="kpi-header">
+                            <span class="kpi-label">Recuperado Líquido</span>
+                            <div class="kpi-icon"><i class="fa-solid fa-building"></i></div>
+                        </div>
+                        <div class="kpi-body"><div class="kpi-val" id="custo-liquido-val">R$ 0,00</div></div>
+                        <span class="kpi-sub">Valor retido pela empresa (bruto − custo)</span>
                     </div>
                 </div>
             </div>
@@ -870,6 +914,35 @@
         aplicarPrazo('cVIP',  mediaDiasRecebimento(daClasse('Classe VIP')));
     }
 
+    // Custas de cobrança: sobre os títulos recebidos (liquidados) no mês selecionado.
+    // Bruto = soma da Coluna L (valor pago). Custo/bonificação = soma de max(L - K, 0)
+    // por título (quando L <= K não há desconto). Líquido = bruto - custo.
+    function renderCustasCobranca(selKey) {
+        const refStart = inicioDoMes(selKey);
+        const refEnd = fimDoMes(selKey);
+        const recebidos = DADOS.filter(r =>
+            r.dtLiq &&
+            r.dtLiq.getTime() >= refStart.getTime() &&
+            r.dtLiq.getTime() <= refEnd.getTime()
+        );
+
+        let bruto = 0, custo = 0, qtd = 0;
+        recebidos.forEach(r => {
+            const pago = r.valorPago > 0 ? r.valorPago : 0;
+            if (!(pago > 0)) return;
+            bruto += pago;
+            const dif = r.valorPago - r.valorOriginal;
+            if (dif > 0) custo += dif;   // só bonifica quando pagou acima do valor original
+            qtd += 1;
+        });
+        const liquido = bruto - custo;
+
+        setText('custo-bruto-val', formatBRL(bruto));
+        setText('custo-bruto-qty', qtd + (qtd === 1 ? ' título recuperado' : ' títulos recuperados'));
+        setText('custo-bonif-val', formatBRL(custo));
+        setText('custo-liquido-val', formatBRL(liquido));
+    }
+
     // Percentual de dívida envelhecida (aging): valor não recuperado (Coluna K)
     // de cada faixa de atraso, dividido pelo total de inadimplência não resolvida
     // (Situação, Coluna G, diferente de "Resolvido"). Base: Data de Vencimento (I).
@@ -1191,6 +1264,7 @@
         renderRosca(selKey);
         renderRoscaClasse(selKey);
         renderPrazoMedio(selKey);
+        renderCustasCobranca(selKey);
         renderRecupVenc(selKey);
         renderEnvelhecimento(selKey);
         renderTabela(selKey);
